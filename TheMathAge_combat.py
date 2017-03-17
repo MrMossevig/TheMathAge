@@ -40,33 +40,38 @@ characters =  [["koe-duke",       6, 4, 4, 3, 4, 2, 6],
                ["sa-taurosaur",   3, 6, 6, 6, 4, 3, 7],
                ["sa-saurus",      3, 4, 4, 1, 2, 4, 7]]
 
-def main():
-    # Parsing arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-v",   "--verbose",  action="store_true")
-
-    parser.add_argument("-tname", "--target_name"     )
-    parser.add_argument("-tt",  "--target_toughness"  )
-    parser.add_argument("-tws", "--target_weaponskill")
-    parser.add_argument("-tw",  "--target_wounds"     )
-    parser.add_argument("-tas", "--target_armoursave" )
-    parser.add_argument("-twa", "--target_wardsave"   )
-
-    parser.add_argument("-aname", "--attacker_name"     )
-    parser.add_argument("-as" , "--attacker_strength"   )
-    parser.add_argument("-aws", "--attacker_weaponskill")
-    parser.add_argument("-aa",  "--attacker_attacks"    ) # Can be D3, D6, D6+1, 2D6 or number
-    parser.add_argument("-als", "--attacker_lethal"     )
-    parser.add_argument("-amw", "--attacker_multiple"   )
-
-    parser.add_argument("-kit", "--kit", nargs='*'   ) # list of kit. If e.g. lance it assumes charge and gives +2 strength
-
-    parser.add_argument("-towound",    "--to_wound"  , nargs='*') # usage example: -to_wound 1
-    parser.add_argument("-tohit",      "--to_hit"    , nargs='*') # usage example: -to_hit 4 rro
-    parser.add_argument("-armourroll", "--armourroll", nargs='*') # usage example: -armourroll 2 rrf
-    parser.add_argument("-wardroll",   "--wardroll"  , nargs='*') # usage example: -wardroll 5 rrs
-
-    args = parser.parse_args()
+def main(attacker=None,defender=None):
+    if (attacker is None and defender is None): 
+        # Parsing arguments
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-v",   "--verbose",  action="store_true")
+    
+        parser.add_argument("-tname", "--target_name"     )
+        parser.add_argument("-tt",  "--target_toughness"  )
+        parser.add_argument("-tws", "--target_weaponskill")
+        parser.add_argument("-tw",  "--target_wounds"     )
+        parser.add_argument("-tas", "--target_armoursave" )
+        parser.add_argument("-twa", "--target_wardsave"   )
+    
+        parser.add_argument("-aname", "--attacker_name"     )
+        parser.add_argument("-as" , "--attacker_strength"   )
+        parser.add_argument("-aws", "--attacker_weaponskill")
+        parser.add_argument("-aa",  "--attacker_attacks"    ) # Can be D3, D6, D6+1, 2D6 or number
+        parser.add_argument("-als", "--attacker_lethal"     )
+        parser.add_argument("-amw", "--attacker_multiple"   )
+    
+        parser.add_argument("-kit", "--kit", nargs='*'   ) # list of kit. If e.g. lance it assumes charge and gives +2 strength
+    
+        parser.add_argument("-towound",    "--to_wound"  , nargs='*') # usage example: -to_wound 1
+        parser.add_argument("-tohit",      "--to_hit"    , nargs='*') # usage example: -to_hit 4 rro
+        parser.add_argument("-armourroll", "--armourroll", nargs='*') # usage example: -armourroll 2 rrf
+        parser.add_argument("-wardroll",   "--wardroll"  , nargs='*') # usage example: -wardroll 5 rrs
+    
+        args = parser.parse_args()
+    else:
+        '''alternative method of defining characteristics, from attacker/defender objects defined in parent environment'''
+        ''' more to come'''
+        
 
     verbose = bool(args.verbose)
     print("Verbose(-v): %d" % verbose)
@@ -222,8 +227,6 @@ def main():
     else:
         print('wound:\t%s+\tAVG' % '+\t'.join('{:d}'.format(e) for e in [row[0] for row in woundTotTable[:(tw+1)]]))
         print('prob:\t%s\t%.3f' % ('\t'.join('{:.3f}'.format(e) for e in [row[3] for row in woundTotTable[:(tw+1)]]), woundTotTable[0][4]))
-
-
 def parseRrArgs(rerollText):
     # Parses the input string for reroll, e.g. rro or rrs to an understandable variable
     if(rerollText == "rro"):
@@ -236,8 +239,6 @@ def parseRrArgs(rerollText):
         return -1
     else:
         print("Do not understand: %s" % rerollText)
-
-
 def initVars():
     global tname
     global tt 
@@ -298,7 +299,6 @@ def initVars():
     extraAttacksOnWound = 0
     multipleWoundOnLethal = False
     divine = False
-
 def parseCharacter(verbose):
     # Here we will parse the charactoer
 
