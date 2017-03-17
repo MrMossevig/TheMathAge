@@ -26,19 +26,21 @@ import copy
 import argparse
 
 # ws, s, t, w, a, as, wa
-characters =  [["koe-duke",       6, 4, 4, 3, 4, 2, 6],
-               ["koe-paladin",    5, 4, 4, 3, 3, 2, 6],
-               ["koe-questing",   4, 4, 3, 1, 1, 2, 6],
-               ["koe-grail",      5, 4, 4, 1, 2, 2, 6],
-               ["koe-realm",      4, 4, 3, 1, 1, 2, 6],
-               ["koe-horse",      3, 3, 3, 1, 1, 7, 7],
-               ["eos-stank",      3, 6, 6, 7, 1, 1, 7],
+characters =  [["eos-heavyinf",   3, 3, 3, 3, 1, 5, 7],
                ["eos-marshal",    5, 4, 4, 3, 3, 4, 7],
                ["eos-prelate",    5, 4, 4, 3, 2, 5, 7],
-               ["eos-heavyinf",   3, 3, 3, 3, 1, 5, 7],
+               ["eos-stank",      3, 6, 6, 7, 1, 1, 7],
+               ["he-chariot",     5, 5, 4, 4, 2, 3, 7],
+               ["koe-duke",       6, 4, 4, 3, 4, 2, 6],
+               ["koe-grail",      5, 4, 4, 1, 2, 2, 6],
+               ["koe-horse",      3, 3, 3, 1, 1, 7, 7],
+               ["koe-paladin",    5, 4, 4, 3, 3, 2, 6],
+               ["koe-questing",   4, 4, 3, 1, 1, 2, 6],
+               ["koe-realm",      4, 4, 3, 1, 1, 2, 6],
+               ["sa-saurus",      3, 4, 4, 1, 2, 4, 7],
                ["sa-stygiosaur",  4, 5, 5, 5, 4, 3, 7],
                ["sa-taurosaur",   3, 6, 6, 6, 4, 3, 7],
-               ["sa-saurus",      3, 4, 4, 1, 2, 4, 7]]
+               ["ud-dreadsphinx", 5, 6, 8, 5, 4, 4, 7]]
 
 def main():
     # Parsing arguments
