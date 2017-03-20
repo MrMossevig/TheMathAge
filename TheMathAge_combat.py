@@ -30,7 +30,7 @@ characters =  [["eos-heavyinf",   3, 3, 3, 3, 1, 5, 7],
                ["eos-marshal",    5, 4, 4, 3, 3, 4, 7],
                ["eos-prelate",    5, 4, 4, 3, 2, 5, 7],
                ["eos-stank",      3, 6, 6, 7, 1, 1, 7],
-               ["he-chariot",     5, 5, 4, 4, 2, 3, 7],
+               ["he-lionchariot", 5, 5, 4, 4, 2, 3, 7],
                ["koe-duke",       6, 4, 4, 3, 4, 2, 6],
                ["koe-grail",      5, 4, 4, 1, 2, 2, 6],
                ["koe-horse",      3, 3, 3, 1, 1, 7, 7],
@@ -258,7 +258,7 @@ def main(attacker=None,defender=None):
         printStats(woundMwTable)
         print("Total Probability for wounds")
         printStats(woundTotTable)
-        print("Multiple Wounds added after extra wounds:")
+        print("Multiple Wounds added after extra attacks:")
         printStats(woundMw2Table)
 
     if(extraAttacksOnWound):
