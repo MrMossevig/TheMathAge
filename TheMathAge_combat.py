@@ -42,6 +42,41 @@ characters =  [["eos-heavyinf",   3, 3, 3, 3, 1, 5, 7],
                ["sa-taurosaur",   3, 6, 6, 6, 4, 3, 7],
                ["ud-dreadsphinx", 5, 6, 8, 5, 4, 4, 7]]
 
+
+def classToArgs(atck=None,defe=None):
+        assert atck is not None
+        assert defe is not None            
+
+        args = argparse.Namespace()
+        
+        args.attacker_name = atck.name
+        args.attacker_strength = atck.S
+        args.attacker_weaponskill = atck.WS
+        args.attacker_attacks = atck.A
+       
+        args.target_name = defe.name
+        args.target_toughness = defe.T
+        args.target_weaponskill = defe.WS
+        args.target_wounds = defe.W
+        args.target_armoursave = defe.AS
+        args.target_wardsave = defe.WS
+        
+        args.to_wound = atck.toroll.wound
+        args.to_hit = atck.toroll.hit
+        args.armourroll = defe.rerolls.armour
+        args.wardroll = defe.rerolls.ward
+        
+        args.target_name = defe.name
+       
+        ''' to be implemented ''' 
+        args.attacker_lethal= None
+        args.attacker_multiple = None        
+        args.kit = False
+        args.verbose = False
+        
+        
+        return args
+
 def main(attacker=None,defender=None):
     if (attacker is None and defender is None): 
         # Parsing arguments
@@ -69,14 +104,17 @@ def main(attacker=None,defender=None):
         parser.add_argument("-armourroll", "--armourroll", nargs='*') # usage example: -armourroll 2 rrf
         parser.add_argument("-wardroll",   "--wardroll"  , nargs='*') # usage example: -wardroll 5 rrs
     
-        args = parser.parse_args()
+        args = parser.parse_args()        
+
     else:
         '''alternative method of defining characteristics, from attacker/defender objects defined in parent environment'''
         ''' more to come'''
-        
+        args = classToArgs(atck=attacker,defe=defender)
+        print(args)
 
     verbose = bool(args.verbose)
     print("Verbose(-v): %d" % verbose)
+
 
     global tname
     global tt 
