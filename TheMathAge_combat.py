@@ -31,10 +31,10 @@ characters =  [["eos-heavyinf",   3, 3, 3, 3, 1, 5, 7],
                ["eos-prelate",    5, 4, 4, 3, 2, 5, 7],
                ["eos-stank",      3, 6, 6, 7, 1, 1, 7],
                ["he-lionchariot", 5, 5, 4, 4, 2, 3, 7],
-               ["koe-duke",       6, 4, 4, 3, 4, 2, 6],
+               ["koe-duke",       6, 4, 4, 3, 4, 5, 6],
                ["koe-grail",      5, 4, 4, 1, 2, 2, 6],
                ["koe-horse",      3, 3, 3, 1, 1, 7, 7],
-               ["koe-paladin",    5, 4, 4, 3, 3, 2, 6],
+               ["koe-paladin",    5, 4, 4, 3, 3, 5, 6],
                ["koe-questing",   4, 4, 3, 1, 1, 2, 6],
                ["koe-realm",      4, 4, 3, 1, 1, 2, 6],
                ["sa-saurus",      3, 4, 4, 1, 2, 4, 7],
@@ -420,6 +420,10 @@ def parseKit(verbose):
             print("Kit: Crusader's Helm")
             tas -= 1
             armour_rr = 7
+        elif (item == "bluffershelm"):
+            print("Kit: Bluffer's Helm")
+            tas -= 1
+            wound_rr = -1
         elif (item == "dragonscalehelm"):
             print("Kit: Dragonscale Helm")
             tas -= 1
@@ -441,6 +445,15 @@ def parseKit(verbose):
             print("Kit: Lance")
             ast += 2
         # Mundane Armour
+        elif (item == "horse"):
+            print("Kit: Horse")
+            tas -= 1
+        elif (item == "hippogriff"):
+            print("Kit: Hippogriff")
+            tas -= 1
+        elif (item == "barding"):
+            print("Kit: Barding")
+            tas -= 1
         elif (item == "shield"):
             print("Kit: Shield")
             tas -= 1
@@ -499,7 +512,7 @@ def getWoundAs(die):
     return (die < armourroll)
 
 def getWoundWa(die):
-                  return (die < wardroll)
+    return (die < wardroll)
 
 def resolveCombat(verbose):
     # Here we will resolve the combat and get the percentage chance for a wound per attack
@@ -520,10 +533,14 @@ def resolveCombat(verbose):
         for die2 in range(1,7):
             prob2   = prob1   * prob
 
-            if((not hit) and (die1 <= hit_rr)):
-                hit = getHit(die2)
+            if(hit and (hit_rr == -1)): # Reroll succesful hit
+                hit2 = getHit(die2)
+            elif((not hit) and (die1 <= hit_rr)):
+                hit2 = getHit(die2)
+            else:
+                hit2 = hit
 
-            if (not hit):
+            if (not hit2):
                 closeLoop(1, prob2)
                 continue
             else:
@@ -545,12 +562,18 @@ def resolveCombat(verbose):
                 # Fourth die, to wound reroll
                 for die4 in range(1,7):
                     prob4   = prob3   * prob
-           
-                    if((not wound) and (die3 <= wound_rr)):
-                        wound = getWound(die4)
-                        lethal = (die4 == 6)
 
-                    if (not wound):
+                    if(wound and (wound_rr == -1)): # Reroll succesful wound
+                        wound2  = getWound(die4)
+                        lethal2 = (die4 == 6)
+                    elif((not wound) and (die3 <= wound_rr)):
+                        wound2  = getWound(die4)
+                        lethal2 = (die4 == 6)
+                    else:
+                        wound2  = wound
+                        lethal2 = lethal
+
+                    if (not wound2):
                         closeLoop(3, prob4)
                         continue
                     else:
@@ -571,11 +594,15 @@ def resolveCombat(verbose):
                         # Sixth die, armour save reroll
                         for die6 in range(1,7):
                             prob6   = prob5   * prob
-                            if(not (lethal and als)): # No need to reroll armour if lethal strik
-                                if(wound_as and (die5 <= armour_rr)): # Re-roll failed armour saves (i.e. wound)
-                                    wound_as = (getWoundAs(die6) and wound)
+                            if(not (lethal2 and als)): # No need to reroll armour if lethal strike
+                                if((not wound_as) and (armour_rr == -1)): # Reroll succesfull save (i.e not wound)
+                                    wound_as2 = getWoundAs(die6)
+                                elif(wound_as and (die5 <= armour_rr)): # Re-roll failed armour saves (i.e. wound)
+                                    wound_as2 = getWoundAs(die6)
+                                else:
+                                    wound_as2 = wound_as
 
-                            if (not wound_as):
+                            if (not wound_as2):
                                 closeLoop(5, prob6)
                                 continue
                             else:
@@ -598,42 +625,44 @@ def resolveCombat(verbose):
                                     prob8   = prob7   * prob
                                     
                                     if((not wound_wa) and (ward_rr == -1)): # Reroll succesfull save (i.e not wound)
-                                         wound_wa = (getWoundWa(die8) and wound_as)
+                                        wound_wa2 = getWoundWa(die8)
                                     elif(wound_wa and (die7 <= wound_rr)): # Reroll failed save (i.e wound)
-                                        wound_wa = (getWoundWa(die8) and wound_as)
+                                        wound_wa2 = getWoundWa(die8)
+                                    else:
+                                        wound_wa2 = wound_wa
 
 
-                                    if (not wound_wa):
+                                    if (not wound_wa2):
                                         closeLoop(7, prob8)
                                         continue
                                     else:
                                         woundWaTable[1][1] += prob8
                                         woundWaTable[1][2] += 1
 
-                                    if((not multipleWoundOnLethal) or lethal):
+                                    if((not multipleWoundOnLethal) or lethal2):
                                         if(amw == "D3"):
                                             for die9 in range(1,4):
                                                 prob9 = prob8   * prob*2
-                                                woundMwTable[wound_wa*die9][1] += prob9
-                                                woundMwTable[wound_wa*die9][2] += 1
+                                                woundMwTable[wound_wa2*die9][1] += prob9
+                                                woundMwTable[wound_wa2*die9][2] += 1
                                         elif(amw == "D3+1"):
                                             for die9 in range(1,4):
                                                 prob9 = prob8   * prob*2
-                                                woundMwTable[wound_wa*(die9+1)][1] += prob9
-                                                woundMwTable[wound_wa*(die9+1)][2] += 1
+                                                woundMwTable[wound_wa2*(die9+1)][1] += prob9
+                                                woundMwTable[wound_wa2*(die9+1)][2] += 1
                                         elif(amw == "D6"):
                                             for die9 in range(1,7):
                                                 prob9 = prob8   * prob
-                                                woundMwTable[wound_wa*die9][1] += prob9
-                                                woundMwTable[wound_wa*die9][2] += 1
+                                                woundMwTable[wound_wa2*die9][1] += prob9
+                                                woundMwTable[wound_wa2*die9][2] += 1
                                         else:
                                             # Default case
-                                            woundMwTable[wound_wa*int(amw)][1] += prob8
-                                            woundMwTable[wound_wa*int(amw)][2] += 1
+                                            woundMwTable[wound_wa2*int(amw)][1] += prob8
+                                            woundMwTable[wound_wa2*int(amw)][2] += 1
                                     else:
                                         # If multipleWoundOnLethal and not lethal
-                                        woundMwTable[wound_wa][1] += prob8
-                                        woundMwTable[wound_wa][2] += 1
+                                        woundMwTable[wound_wa2][1] += prob8
+                                        woundMwTable[wound_wa2][2] += 1
                                        
 def closeLoop(level, prob):
     global hitTable
