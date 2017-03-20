@@ -47,7 +47,7 @@ def main(attacker=None,defender=None):
     if (attacker is None and defender is None):
         defender = unit()
         attacker = unit()
-        getCharFromName = True
+        getCharFromCmdLine = True
         # Parsing arguments
         parser = argparse.ArgumentParser()
         parser.add_argument("-v",   "--verbose",  action="store_true")
@@ -73,14 +73,15 @@ def main(attacker=None,defender=None):
         parser.add_argument("-armourroll", "--armourroll", nargs='*') # usage example: -armourroll 2 rrf
         parser.add_argument("-wardroll",   "--wardroll"  , nargs='*') # usage example: -wardroll 5 rrs
     
-        args = parser.parse_args()        
+        args = parser.parse_args()
+        verbose = bool(args.verbose)
 
     else:
         '''alternative method of defining characteristics, from attacker/defender objects defined in parent environment'''
         ''' more to come'''
-        getCharFromName = False
+        getCharFromCmdLine = False
+        verbose = True # For now
 
-    verbose = bool(args.verbose)
     print("Verbose(-v): %d" % verbose)
 
     global aname
@@ -94,72 +95,73 @@ def main(attacker=None,defender=None):
     global wardroll
 
     # Getting characteristics from name
-    if(getCharFromName):
+    if(getCharFromCmdLine):
         tname = args.target_name
         aname = args.attacker_name
         parseCharacter(attacker, defender, verbose)
 
-    # Modifying characteristics from kit
-    if(args.kit):
-        kit   = args.kit
-    else:
-        kit   = []
-    parseKit(attacker, defender, verbose)
+        # Modifying characteristics from kit
+        if(args.kit):
+            kit   = args.kit
+        else:
+            kit   = []
+            parseKit(attacker, defender, verbose)
 
-    # Then overriding with commandline stats
-    if(args.target_toughness    ): defender.T  = int(args.target_toughness    )
-    if(args.target_weaponskill  ): defender.WS = int(args.target_weaponskill  )
-    if(args.target_wounds       ): defender.W  = int(args.target_wounds       )
-    if(args.target_armoursave   ): defender.AS = int(args.target_armoursave   )
-    if(args.target_wardsave     ): defender.WA = int(args.target_wardsave     )
+        # Then overriding with commandline stats
+        if(args.target_toughness    ): defender.T  = int(args.target_toughness    )
+        if(args.target_weaponskill  ): defender.WS = int(args.target_weaponskill  )
+        if(args.target_wounds       ): defender.W  = int(args.target_wounds       )
+        if(args.target_armoursave   ): defender.AS = int(args.target_armoursave   )
+        if(args.target_wardsave     ): defender.WA = int(args.target_wardsave     )
 
-    if(args.attacker_strength    ): attacker.S  = int(args.attacker_strength    )
-    if(args.attacker_weaponskill ): attacker.WS = int(args.attacker_weaponskill )
-    if(args.attacker_attacks     ): attacker.A  = args.attacker_attacks
-    if(args.attacker_lethal      ): attacker.LS = bool(int(args.attacker_lethal))
+        if(args.attacker_strength    ): attacker.S  = int(args.attacker_strength    )
+        if(args.attacker_weaponskill ): attacker.WS = int(args.attacker_weaponskill )
+        if(args.attacker_attacks     ): attacker.A  = args.attacker_attacks
+        if(args.attacker_lethal      ): attacker.LS = bool(int(args.attacker_lethal))
 
-    if(args.attacker_multiple    ):
-        try:
-            attacker.special.multiple = int(args.attacker_multiple)
-        except ValueError:
-            attacker.special.multiple = args.attacker_multiple
+        if(args.attacker_multiple    ):
+            try:
+                attacker.special.multiple = int(args.attacker_multiple)
+            except ValueError:
+                attacker.special.multiple = args.attacker_multiple
 
     # Calculating to-hit, to wound rolls
     calcDice(attacker, defender, verbose)
 
-    # Then overriding these with commandline
-    if(args.to_hit    ):
-        tohit      = int(args.to_hit[0]    )
-        if(len(args.to_hit) > 1):
-            rr    = parseRrArgs(args.to_hit[1])
-            if(hit_rr < 0):
-                defender.rerolls.hit = rr
-            else:
-                attacker.rerolls.hit = rr
-    if(args.to_wound  ): 
-        towound    = int(args.to_wound[0]  )
-        if(len(args.to_wound) > 1):
-            rr  = parseRrArgs(args.to_wound[1])
-            if(rr < 0):
-                defender.rerolls.wound = rr
-            else:
-                attacker.rerolls.wound = rr
-    if(args.armourroll): 
-        armourroll = int(args.armourroll[0])
-        if(len(args.armourroll) > 1):
-            rr = parseRrArgs(args.armourroll[1])
-            if(rr < 0):
-                attacker.rerolls.armour = rr
-            else:
-                defender.rerolls.armour = rr
-    if(args.wardroll  ): 
-        wardroll   = int(args.wardroll[0]  )
-        if(len(args.wardroll) > 1):
-            rr   = parseRrArgs(args.wardroll[1])
-            if(rr < 0):
-                attacker.rerolls.ward = rr
-            else:
-                defender.rerolls.ward = rr
+    if(getCharFromCmdLine):
+        # Then overriding these with commandline
+        if(args.to_hit    ):
+            tohit      = int(args.to_hit[0]    )
+            if(len(args.to_hit) > 1):
+                rr    = parseRrArgs(args.to_hit[1])
+                if(hit_rr < 0):
+                    defender.rerolls.hit = rr
+                else:
+                    attacker.rerolls.hit = rr
+        if(args.to_wound  ): 
+            towound    = int(args.to_wound[0]  )
+            if(len(args.to_wound) > 1):
+                rr  = parseRrArgs(args.to_wound[1])
+                if(rr < 0):
+                    defender.rerolls.wound = rr
+                else:
+                    attacker.rerolls.wound = rr
+        if(args.armourroll): 
+            armourroll = int(args.armourroll[0])
+            if(len(args.armourroll) > 1):
+                rr = parseRrArgs(args.armourroll[1])
+                if(rr < 0):
+                    attacker.rerolls.armour = rr
+                else:
+                    defender.rerolls.armour = rr
+        if(args.wardroll  ): 
+            wardroll   = int(args.wardroll[0]  )
+            if(len(args.wardroll) > 1):
+                rr   = parseRrArgs(args.wardroll[1])
+                if(rr < 0):
+                    attacker.rerolls.ward = rr
+                else:
+                    defender.rerolls.ward = rr
 
     if(verbose):
         print("Target Weapon Skill (-tws): %s" % defender.WS)
