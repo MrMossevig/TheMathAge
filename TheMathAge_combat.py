@@ -24,6 +24,7 @@ DO NOT USE:
 
 import copy
 import argparse
+from unit_objects import unit
 
 # ws, s, t, w, a, as, wa
 characters =  [["eos-heavyinf",   3, 3, 3, 3, 1, 5, 7],
@@ -42,43 +43,11 @@ characters =  [["eos-heavyinf",   3, 3, 3, 3, 1, 5, 7],
                ["sa-taurosaur",   3, 6, 6, 6, 4, 3, 7],
                ["ud-dreadsphinx", 5, 6, 8, 5, 4, 4, 7]]
 
-
-def classToArgs(atck=None,defe=None):
-        assert atck is not None
-        assert defe is not None            
-
-        args = argparse.Namespace()
-        
-        args.attacker_name = atck.name
-        args.attacker_strength = atck.S
-        args.attacker_weaponskill = atck.WS
-        args.attacker_attacks = atck.A
-       
-        args.target_name = defe.name
-        args.target_toughness = defe.T
-        args.target_weaponskill = defe.WS
-        args.target_wounds = defe.W
-        args.target_armoursave = defe.AS
-        args.target_wardsave = defe.WS
-        
-        args.to_wound = atck.toroll.wound
-        args.to_hit = atck.toroll.hit
-        args.armourroll = defe.rerolls.armour
-        args.wardroll = defe.rerolls.ward
-        
-        args.target_name = defe.name
-       
-        ''' to be implemented ''' 
-        args.attacker_lethal= None
-        args.attacker_multiple = None        
-        args.kit = False
-        args.verbose = False
-        
-        
-        return args
-
 def main(attacker=None,defender=None):
-    if (attacker is None and defender is None): 
+    if (attacker is None and defender is None):
+        defender = unit()
+        attacker = unit()
+        getCharFromName = True
         # Parsing arguments
         parser = argparse.ArgumentParser()
         parser.add_argument("-v",   "--verbose",  action="store_true")
@@ -109,26 +78,13 @@ def main(attacker=None,defender=None):
     else:
         '''alternative method of defining characteristics, from attacker/defender objects defined in parent environment'''
         ''' more to come'''
-        args = classToArgs(atck=attacker,defe=defender)
-        print(args)
+        getCharFromName = False
 
     verbose = bool(args.verbose)
     print("Verbose(-v): %d" % verbose)
 
-
-    global tname
-    global tt 
-    global tws
-    global tw
-    global tas
-    global twa
-
     global aname
-    global ast
-    global aws
-    global aa
-    global als
-    global amw
+    global tname
 
     global kit
 
@@ -137,75 +93,91 @@ def main(attacker=None,defender=None):
     global armourroll
     global wardroll
 
-    global hit_rr
-    global wound_rr
-    global armour_rr
-    global ward_rr
+    # Getting characteristics from name
+    if(getCharFromName):
+        tname = args.target_name
+        aname = args.attacker_name
+        parseCharacter(attacker, defender, verbose)
 
-    tname = args.target_name
-    aname = args.attacker_name
+    # Modifying characteristics from kit
     if(args.kit):
         kit   = args.kit
     else:
         kit   = []
-
-    # First parsing attacker and targets and kit by name
-    initVars()
-    parseCharacter(verbose)
-    parseKit(verbose)
+    parseKit(attacker, defender, verbose)
 
     # Then overriding with commandline stats
-    if(args.target_toughness    ): tt  = int(args.target_toughness    )
-    if(args.target_weaponskill  ): tws = int(args.target_weaponskill  )
-    if(args.target_wounds       ): tw  = int(args.target_wounds       )
-    if(args.target_armoursave   ): tas = int(args.target_armoursave   )
-    if(args.target_wardsave     ): twa = int(args.target_wardsave     )
+    if(args.target_toughness    ): defender.T  = int(args.target_toughness    )
+    if(args.target_weaponskill  ): defender.WS = int(args.target_weaponskill  )
+    if(args.target_wounds       ): defender.W  = int(args.target_wounds       )
+    if(args.target_armoursave   ): defender.AS = int(args.target_armoursave   )
+    if(args.target_wardsave     ): defender.WA = int(args.target_wardsave     )
 
-    if(args.attacker_strength    ): ast = int(args.attacker_strength    )
-    if(args.attacker_weaponskill ): aws = int(args.attacker_weaponskill )
-    if(args.attacker_attacks     ): aa  = args.attacker_attacks
-    if(args.attacker_lethal      ): als = bool(int(args.attacker_lethal))
+    if(args.attacker_strength    ): attacker.S  = int(args.attacker_strength    )
+    if(args.attacker_weaponskill ): attacker.WS = int(args.attacker_weaponskill )
+    if(args.attacker_attacks     ): attacker.A  = args.attacker_attacks
+    if(args.attacker_lethal      ): attacker.LS = bool(int(args.attacker_lethal))
 
     if(args.attacker_multiple    ):
         try:
-            amw = int(args.attacker_multiple)
+            attacker.special.multiple = int(args.attacker_multiple)
         except ValueError:
-            amw = args.attacker_multiple
+            attacker.special.multiple = args.attacker_multiple
 
     # Calculating to-hit, to wound rolls
-    calcDice(verbose)
+    calcDice(attacker, defender, verbose)
 
     # Then overriding these with commandline
     if(args.to_hit    ):
         tohit      = int(args.to_hit[0]    )
-        if(len(args.to_hit) > 1):      hit_rr    = parseRrArgs(args.to_hit[1])
+        if(len(args.to_hit) > 1):
+            rr    = parseRrArgs(args.to_hit[1])
+            if(hit_rr < 0):
+                defender.rerolls.hit = rr
+            else:
+                attacker.rerolls.hit = rr
     if(args.to_wound  ): 
         towound    = int(args.to_wound[0]  )
-        if(len(args.to_wound) > 1):    wound_rr  = parseRrArgs(args.to_wound[1])
+        if(len(args.to_wound) > 1):
+            rr  = parseRrArgs(args.to_wound[1])
+            if(rr < 0):
+                defender.rerolls.wound = rr
+            else:
+                attacker.rerolls.wound = rr
     if(args.armourroll): 
         armourroll = int(args.armourroll[0])
-        if(len(args.armourroll) > 1): armour_rr = parseRrArgs(args.armourroll[1])
+        if(len(args.armourroll) > 1):
+            rr = parseRrArgs(args.armourroll[1])
+            if(rr < 0):
+                attacker.rerolls.armour = rr
+            else:
+                defender.rerolls.armour = rr
     if(args.wardroll  ): 
         wardroll   = int(args.wardroll[0]  )
-        if(len(args.wardroll) > 1):    ward_rr   = parseRrArgs(args.wardroll[1])
+        if(len(args.wardroll) > 1):
+            rr   = parseRrArgs(args.wardroll[1])
+            if(rr < 0):
+                attacker.rerolls.ward = rr
+            else:
+                defender.rerolls.ward = rr
 
     if(verbose):
-        print("Target Weapon Skill (-tws): %s" % tws)
-        print("Target Toughness    (-tt) : %s" % tt )
-        print("Target Armour Save  (-tas): %s" % tas)
-        print("Target Ward Save    (-twa): %s" % twa)
+        print("Target Weapon Skill (-tws): %s" % defender.WS)
+        print("Target Toughness    (-tt) : %s" % defender.T )
+        print("Target Armour Save  (-tas): %s" % defender.AS)
+        print("Target Ward Save    (-twa): %s" % defender.WA)
                  
-        print("Attacker Weapon Skill  (-aws): %s" % aws)
-        print("Attacker Strength      (-as) : %s" % ast)
-        print("Attacker Attacks       (-aa) : %s" % aa )
-        print("Attacker Lethal Strike (-als : %s" % als)
-        print("Attacker Multiple W    (-amw): %s" % amw)
+        print("Attacker Weapon Skill  (-aws): %s" % attacker.WS)
+        print("Attacker Strength      (-as) : %s" % attacker.S )
+        print("Attacker Attacks       (-aa) : %s" % attacker.A )
+        print("Attacker Lethal Strike (-als : %s" % attacker.special.lethal)
+        print("Attacker Multiple W    (-amw): %s" % attacker.special.multiple)
         print("");
 
-        print("To hit:      %s, reroll: %s" % (tohit,      hit_rr   ))
-        print("To wound:    %s, reroll: %s" % (towound,    wound_rr ))
-        print("Armour Roll: %s, reroll: %s" % (armourroll, armour_rr))
-        print("Ward Roll:   %s, reroll: %s" % (wardroll,   ward_rr  ))
+        print("To hit:      %s, a.reroll: %s, d.reroll: %s" % (tohit,      attacker.rerolls.hit,    defender.rerolls.hit   ))
+        print("To wound:    %s, a.reroll: %s, d.reroll: %s" % (towound,    attacker.rerolls.wound,  defender.rerolls.wound ))
+        print("Armour Roll: %s, a.reroll: %s, d.reroll: %s" % (armourroll, attacker.rerolls.armour, defender.rerolls.armour))
+        print("Ward Roll:   %s, a.reroll: %s, d.reroll: %s" % (wardroll,   attacker.rerolls.ward,   defender.rerolls.ward  ))
         print("")
 
     # Creating tables to store the stats. Not all of these are strictly needed but it's okay for debugging purposes
@@ -235,13 +207,13 @@ def main(attacker=None,defender=None):
 
     woundMw2Table  =  copy.deepcopy(woundTotTable)
 
-    resolveCombat(verbose)
+    resolveCombat(attacker, defender, verbose)
     sumProb(hitTable)
     sumProb(woundTable)
     sumProb(woundAsTable)
     sumProb(woundWaTable)
     sumProb(woundMwTable) # This applies multiple wounds for "Multiple Wounds on Lethal"
-    multiplyAttacks()
+    multiplyAttacks(attacker, defender)
     sumProb(woundTotTable)
     sumProb(woundMw2Table)  # While if you have extra attacks, you need to add multiple wounds after extra attacks    
 
@@ -261,12 +233,14 @@ def main(attacker=None,defender=None):
         print("Multiple Wounds added after extra attacks:")
         printStats(woundMw2Table)
 
-    if(extraAttacksOnWound):
+    tw = defender.W
+    if(attacker.special.extraAttacksOnWound):
         print('wound:\t%s+\tAVG' % '+\t'.join('{:d}'.format(e) for e in [row[0] for row in woundMw2Table[:(tw+1)]]))
         print('prob:\t%s\t%.3f' % ('\t'.join('{:.3f}'.format(e) for e in [row[3] for row in woundMw2Table[:(tw+1)]]), woundMw2Table[0][4]))
     else:
         print('wound:\t%s+\tAVG' % '+\t'.join('{:d}'.format(e) for e in [row[0] for row in woundTotTable[:(tw+1)]]))
         print('prob:\t%s\t%.3f' % ('\t'.join('{:.3f}'.format(e) for e in [row[3] for row in woundTotTable[:(tw+1)]]), woundTotTable[0][4]))
+
 def parseRrArgs(rerollText):
     # Parses the input string for reroll, e.g. rro or rrs to an understandable variable
     if(rerollText == "rro"):
@@ -279,78 +253,15 @@ def parseRrArgs(rerollText):
         return -1
     else:
         print("Do not understand: %s" % rerollText)
-def initVars():
-    global tname
-    global tt 
-    global tws
-    global tw
-    global tas
-    global twa
+
+def parseCharacter(attacker, defender, verbose):
+    # Here we will parse the character
 
     global aname
-    global ast
-    global aws
-    global aa
-    global amw
-    global als
-
-    # Re-rolls 0 = no reroll, 1 = reroll 1s, 2 = reroll 2s, 7 = reroll fails, -1 = reroll successes (e.g. divine attacks)
-    global hit_rr
-    global wound_rr
-    global armour_rr
-    global ward_rr
-
-    global hitBonus
-    global woundBonus
-    global armourBonus
-    global wardBonus
-
-    global woundMin
-    global extraAttacksOnWound
-    global multipleWoundOnLethal
-    global divine
-
-    # Setting default characterstats
+    global tname
+ 
     if(not tname): tname = ""
-    tt    = 3
-    tws   = 3
-    tw    = 10
-    tas   = 7
-    twa   = 7
-
     if(not aname): aname = ""
-    ast   = 3
-    aws   = 3
-    aa    = 1
-    amw   = 1
-    als   = False
-
-    hit_rr    = 0
-    wound_rr  = 0
-    armour_rr = 0
-    ward_rr   = 0
-
-    hitBonus   = 0
-    woundBonus = 0
-    armourBonus = 0
-    wardBonus  = 0
-
-    woundMin = 0
-    extraAttacksOnWound = 0
-    multipleWoundOnLethal = False
-    divine = False
-def parseCharacter(verbose):
-    # Here we will parse the charactoer
-
-    global tt 
-    global tws
-    global tw
-    global tas
-    global twa
-
-    global ast
-    global aws
-    global aa
 
     found_attacker = False
     found_target   = False
@@ -358,176 +269,131 @@ def parseCharacter(verbose):
     for row in characters:
         if(row[0] == aname):
             print("Found Attacker: %s; WS%d, S%d, A%d" % (row[0], row[1], row[2], row[5]))
-            aws = row[1]
-            ast = row[2]
-            aa  = row[5]
+            attacker.WS = row[1]
+            attacker.S  = row[2]
+            attacker.A  = row[5]
             found_attacker = True
         if(row[0] == tname):
             print("Found Target: %s; WS%d, T%d, W%s, AS%d, WA%d" % (row[0], row[1], row[3], row[4], row[6], row[7]))
-            tws = row[1]
-            tt  = row[3]
-            tw  = row[4]
-            tas = row[6]
-            twa = row[7]
+            defender.WS = row[1]
+            defender.T  = row[3]
+            defender.W  = row[4]
+            defender.AS = row[6]
+            defender.WA = row[7]
             found_target = True
             
     if(not found_attacker):
         print("Could not find attacker '%s'. Using default values." % aname)
+        attacker.WS = 3
+        attacker.S  = 3
+        attacker.A  = 1
 
     if(not found_target):
         print("Could not find target '%s'. Using default values." % tname)
+        defender.WS = 3
+        defender.T  = 3
+        defender.W  = 1
+        defender.AS = 7
+        defender.WA = 7
 
 
-def parseKit(verbose):
-
-    global tt 
-    global tws
-    global tw
-    global tas
-    global twa
-
-    global ast
-    global aws
-    global aa
-    global als
-    global amw
-
-    global hit_rr
-    global wound_rr
-    global armour_rr
-    global ward_rr
-
-    global hitBonus
-    global woundBonus
-    global armourBonus
-    global wardBonus
-
-    global divine
-    global extraAttacksOnWound
-    global multipleWoundOnLethal
-    global woundMin
+def parseKit(attacker, defender, verbose):
 
     for item in kit:
         # Virtues, Oaths and Blessing
         if   (item == "audacity"):
             print("Virtue: Audacity")
-            hit_rr   = 7 # Reroll fails
-            wound_rr = 7 # Reroll fails
+            attacker.rerolls.hit   = 7 # Reroll fails
+            attacker.rerolls.wound = 7 # Reroll fails
         elif (item == "might"):
             print("Virtue: Might")
-            aa  += 1
-            ast += 1
-            extraAttacksOnWound = 1
+            attacker.A += 1
+            attacker.S += 1
+            attacker.special.extraAttacksOnWound = 1
         elif (item == "renown"):
             print("Virtue: Renown")
-            als = True
-            amw = "D3+1"
-            multipleWoundOnLethal = True
+            attacker.special.lethal       = True
+            attacker.special.multiple     = "D3+1"
+            attacker.special.multipleWoundOnLethal = True
         elif (item == "qo"):
             print("Oath: Questing Oath")
-            amw = 2
+            attacker.special.multiple = 2
         elif (item == "go"):
             print("Oath: Grail Oath")
-            aws += 1
+            attacker.WS += 1
         elif (item == "fotg"):
             print("Blessing: Favour of the Grail")
-            if (armourBonus > 0): twa = 5
+            if (attacker.bonus.armour > 0): defender.WA = 5
         elif (item == "fotk"):
             print("Blessing: Favour of the King")
-            if (ast >= 5): twa = 5
+            if (attacker.S >= 5): defender.WA = 5
         # Magical Weapons
         elif (item == "axeofbattle"):
             print("Kit: Axe of Battle")
-            woundMin = 3
-            aa = 6
+            attacker.special.woundMin   = 3
+            attacker.A = 6
         elif (item == "blessedsword"):
             print("Kit: Blessed Sword")
-            divine = True
-            wound_rr = 7  # Reroll fails
-            ward_rr  = -1 # Reroll succesful wardsaves
+            attacker.rerolls.wound = 7  # Reroll fails
+            attacker.rerolls.ward  = -1 # Reroll succesful wardsaves
         elif (item == "fleshrender"):
             print("Kit: Flesrender")
-            armourBonus += 1
-            ast += 2
+            attacker.bonus.armour += 1
+            attacker.S += 2
         elif (item == "dragonlance"):
             print("Kit: Dragon Lance")
-            amw = "D3"
-            ast += 2
+            attacker.special.multiple = "D3"
+            attacker.S        += 2
         # Magical Armour
         elif (item == "crusadershelm"):
             print("Kit: Crusader's Helm")
-            tas -= 1
-            armour_rr = 7
+            defender.AS -= 1
+            defender.rerolls.armour = 7
         elif (item == "bluffershelm"):
             print("Kit: Bluffer's Helm")
-            tas -= 1
-            wound_rr = -1
+            defender.AS -= 1
+            defender.rerolls.wound = -1
         elif (item == "dragonscalehelm"):
             print("Kit: Dragonscale Helm")
-            tas -= 1
+            defender.AS -= 1
         elif (item == "dragonmantle"):
             print("Kit: Dragon Mantle")
-            tas -= 2
+            defender.AS -= 2
         elif (item == "hardenedshield"):
             print("Kit: Hardened Shield")
-            tas -= 2
+            defender.AS -= 2
+            if ((defender.I - 3) < 1):
+                defender.I = 1
+            else:
+                defender.I -= 3
         # Enchanted items
         elif (item == "pos"):
             print("Kit: Potion of Strength")
-            ast += 2
+            attacker.S += 2
         # Mundane Weapons
         elif (item == "greatweapon"):
             print("Kit: Great Weapon")
-            ast += 2
+            attacker.S += 2
         elif (item == "lance"):
             print("Kit: Lance")
-            ast += 2
+            attacker.S += 2 # Implicit: Charge
         # Mundane Armour
         elif (item == "horse"):
             print("Kit: Horse")
-            tas -= 1
+            defender.AS -= 1
         elif (item == "hippogriff"):
             print("Kit: Hippogriff")
-            tas -= 1
+            defender.AS -= 1
         elif (item == "barding"):
             print("Kit: Barding")
-            tas -= 1
+            defender.AS -= 1
         elif (item == "shield"):
             print("Kit: Shield")
-            tas -= 1
+            defender.AS -= 1
         # Other
         elif (item == "thunder"):
             print("Thunderous Charge")
-            ast += 1
-
-def calcDice(verbose):
-    global tohit
-    global towound
-    global armourroll
-    global wardroll
-
-    # To hit, lookup table
-    tohit      = hitStats[tws][aws] + hitBonus
-
-    # To wound, can never be better than 2+ or worse than 6+
-    towound    = (tt+4 - ast ) + woundBonus
-    if (towound < 2):
-        towound = 2
-    elif (towound > 6):
-        towound = 6
-    if towound < woundMin:
-        towound = woundMin
-    
-    # Armour, can never be better than 2+
-    armourroll = (tas + (ast-3) + armourBonus)
-    if (armourroll < 2):
-        armourroll = 2
-
-    # Ward, can never be better than 2+
-    wardroll   = (twa + wardBonus)
-    if (wardroll < 2):
-        wardroll = 2
-
+            defender.S += 1
 
 hitStats = [[4,3,3,3,3,3,3,3,3,3],
             [4,4,3,3,3,3,3,3,3,3],
@@ -539,6 +405,32 @@ hitStats = [[4,3,3,3,3,3,3,3,3,3],
             [5,5,5,4,4,4,4,4,3,3],
             [5,5,5,5,4,4,4,4,4,3],
             [5,5,5,5,4,4,4,4,4,4]]
+
+def calcDice(attacker, defender, verbose):
+    global tohit
+    global towound
+    global armourroll
+    global wardroll
+
+    # To hit, lookup table
+    tohit      = hitStats[defender.WS][attacker.WS] + attacker.bonus.hit + defender.bonus.hit
+
+    # To wound, can never be better than 2+ or worse than 6+
+    towound    = (defender.T + 4 - attacker.S) + attacker.bonus.wound + defender.bonus.wound
+    if towound < attacker.special.woundMin:
+        towound = attacker.special.woundMin
+    elif (towound > 6):
+        towound = 6
+    
+    # Armour, can never be better than 2+
+    armourroll = (defender.AS + (attacker.S - 3)) + attacker.bonus.armour + defender.bonus.armour
+    if (armourroll < 2):
+        armourroll = 2
+
+    # Ward, can never be better than 2+
+    wardroll   = defender.WA + attacker.bonus.ward + defender.bonus.ward
+    if (wardroll < 2):
+        wardroll = 2
 
 def getHit(die):
     return (die >= tohit)
@@ -552,7 +444,7 @@ def getWoundAs(die):
 def getWoundWa(die):
     return (die < wardroll)
 
-def resolveCombat(verbose):
+def resolveCombat(attacker, defender, verbose):
     # Here we will resolve the combat and get the percentage chance for a wound per attack
     # There are 4 rolls; hit, wound, armour save and ward save. Because each can be rerolled once we need 8 rolls.
 
@@ -563,20 +455,19 @@ def resolveCombat(verbose):
         prob1   = prob
         hit = getHit(die1)
 
-        if ((not hit) and (not hit_rr)):
+        if ((not hit) and (not (attacker.rerolls.hit or defender.rerolls.hit))):
             closeLoop(0, prob1)
             continue
         
         # Second die, to hit reroll
         for die2 in range(1,7):
             prob2   = prob1   * prob
+            hit2 = hit
 
-            if(hit and (hit_rr == -1)): # Reroll succesful hit
+            if(hit and (defender.rerolls.hit == -1)): # Reroll succesful hit
                 hit2 = getHit(die2)
-            elif((not hit) and (die1 <= hit_rr)):
+            elif((not hit) and (die1 <= attacker.rerolls.hit)):
                 hit2 = getHit(die2)
-            else:
-                hit2 = hit
 
             if (not hit2):
                 closeLoop(1, prob2)
@@ -593,23 +484,22 @@ def resolveCombat(verbose):
                 wound  = getWound(die3)
                 lethal = (die3 == 6)
 
-                if ((not wound) and (not wound_rr)):
+                if ((not wound) and (not (attacker.rerolls.wound or defender.rerolls.wound))):
                     closeLoop(2, prob3)
                     continue
 
                 # Fourth die, to wound reroll
                 for die4 in range(1,7):
                     prob4   = prob3   * prob
+                    wound2  = wound
+                    lethal2 = lethal
 
-                    if(wound and (wound_rr == -1)): # Reroll succesful wound
+                    if(wound and (defender.rerolls.wound == -1)): # Reroll succesful wound
                         wound2  = getWound(die4)
                         lethal2 = (die4 == 6)
-                    elif((not wound) and (die3 <= wound_rr)):
+                    elif((not wound) and (die3 <= attacker.rerolls.wound)):
                         wound2  = getWound(die4)
                         lethal2 = (die4 == 6)
-                    else:
-                        wound2  = wound
-                        lethal2 = lethal
 
                     if (not wound2):
                         closeLoop(3, prob4)
@@ -622,9 +512,9 @@ def resolveCombat(verbose):
                     for die5 in range(1,7):
                         prob5   = prob4   * prob
 
-                        wound_as = (getWoundAs(die5) or (lethal and als))
+                        wound_as = (getWoundAs(die5) or (lethal2 and attacker.special.lethal))
 
-                        if((not wound_as) and (not armour_rr)):
+                        if((not wound_as) and (not (attacker.rerolls.armour or defender.rerolls.armour))):
                             closeLoop(4, prob5)
                             continue
 
@@ -632,13 +522,13 @@ def resolveCombat(verbose):
                         # Sixth die, armour save reroll
                         for die6 in range(1,7):
                             prob6   = prob5   * prob
-                            if(not (lethal2 and als)): # No need to reroll armour if lethal strike
-                                if((not wound_as) and (armour_rr == -1)): # Reroll succesfull save (i.e not wound)
+                            wound_as2 = wound_as
+
+                            if(not (lethal2 and attacker.special.lethal)): # No need to reroll armour if lethal strike
+                                if((not wound_as) and (attacker.rerolls.armour == -1)): # Reroll succesfull save (i.e not wound)
                                     wound_as2 = getWoundAs(die6)
-                                elif(wound_as and (die5 <= armour_rr)): # Re-roll failed armour saves (i.e. wound)
+                                elif(wound_as and (die5 <= defender.rerolls.armour)): # Re-roll failed armour saves (i.e. wound)
                                     wound_as2 = getWoundAs(die6)
-                                else:
-                                    wound_as2 = wound_as
 
                             if (not wound_as2):
                                 closeLoop(5, prob6)
@@ -653,7 +543,7 @@ def resolveCombat(verbose):
 
                                 wound_wa = getWoundWa(die7)
 
-                                if ((not wound_wa) and (not ward_rr)):
+                                if ((not wound_wa) and (not (attacker.rerolls.ward or defender.rerolls.ward))):
                                     closeLoop(6, prob7)
                                     continue
 
@@ -661,14 +551,12 @@ def resolveCombat(verbose):
                                 # Eight die, ward save reroll
                                 for die8 in range(1,7):
                                     prob8   = prob7   * prob
-                                    
-                                    if((not wound_wa) and (ward_rr == -1)): # Reroll succesfull save (i.e not wound)
-                                        wound_wa2 = getWoundWa(die8)
-                                    elif(wound_wa and (die7 <= wound_rr)): # Reroll failed save (i.e wound)
-                                        wound_wa2 = getWoundWa(die8)
-                                    else:
-                                        wound_wa2 = wound_wa
+                                    wound_wa2 = wound_wa
 
+                                    if((not wound_wa) and (attacker.rerolls.ward == -1)): # Reroll succesfull save (i.e not wound)
+                                        wound_wa2 = getWoundWa(die8)
+                                    elif(wound_wa and (die7 <= defender.rerolls.ward)): # Reroll failed save (i.e wound)
+                                        wound_wa2 = getWoundWa(die8)
 
                                     if (not wound_wa2):
                                         closeLoop(7, prob8)
@@ -676,31 +564,33 @@ def resolveCombat(verbose):
                                     else:
                                         woundWaTable[1][1] += prob8
                                         woundWaTable[1][2] += 1
-
-                                    if((not multipleWoundOnLethal) or lethal2):
-                                        if(amw == "D3"):
+                                    
+                                    asmw = attacker.special.multiple
+                                    if(((not attacker.special.multipleWoundOnLethal) or lethal2) and
+                                       (defender.W > 1)):
+                                        if(asmw == "D3"):
                                             for die9 in range(1,4):
                                                 prob9 = prob8   * prob*2
-                                                woundMwTable[wound_wa2*die9][1] += prob9
-                                                woundMwTable[wound_wa2*die9][2] += 1
-                                        elif(amw == "D3+1"):
+                                                woundMwTable[die9][1] += prob9
+                                                woundMwTable[die9][2] += 1
+                                        elif(asmw == "D3+1"):
                                             for die9 in range(1,4):
                                                 prob9 = prob8   * prob*2
-                                                woundMwTable[wound_wa2*(die9+1)][1] += prob9
-                                                woundMwTable[wound_wa2*(die9+1)][2] += 1
-                                        elif(amw == "D6"):
+                                                woundMwTable[(die9+1)][1] += prob9
+                                                woundMwTable[(die9+1)][2] += 1
+                                        elif(asmw == "D6"):
                                             for die9 in range(1,7):
                                                 prob9 = prob8   * prob
-                                                woundMwTable[wound_wa2*die9][1] += prob9
-                                                woundMwTable[wound_wa2*die9][2] += 1
+                                                woundMwTable[die9][1] += prob9
+                                                woundMwTable[die9][2] += 1
                                         else:
                                             # Default case
-                                            woundMwTable[wound_wa2*int(amw)][1] += prob8
-                                            woundMwTable[wound_wa2*int(amw)][2] += 1
+                                            woundMwTable[int(asmw)][1] += prob8
+                                            woundMwTable[int(asmw)][2] += 1
                                     else:
                                         # If multipleWoundOnLethal and not lethal
-                                        woundMwTable[wound_wa2][1] += prob8
-                                        woundMwTable[wound_wa2][2] += 1
+                                        woundMwTable[1][1] += prob8
+                                        woundMwTable[1][2] += 1
                                        
 def closeLoop(level, prob):
     global hitTable
@@ -725,41 +615,46 @@ def closeLoop(level, prob):
 
 
 
-def multiplyAttacks():
+def multiplyAttacks(attacker, defender):
     # Multiplying attacks to see how many wounds the model/unit makes
-    if (aa == "D3"):
-        for die1 in range(1,4):
-            addProb(die1, 0, 1/3, 0, extraAttacksOnWound)
-    elif (aa == "D6"):
-        for die1 in range(1,7):
-            addProb(die1, 0, 1/6, 0, extraAttacksOnWound)
-    elif (aa == "D6+1"):
-        for die1 in range(1,7):
-            addProb(die1+1, 0, 1/6, 0, extraAttacksOnWound)
-    elif (aa == "2D6"):
-        for die1 in range(1,7):
-            for die2 in range(1,7):
-                addProb(die1+die2, 0, 1/36, 0, extraAttacksOnWound)
+    aseaow = attacker.special.extraAttacksOnWound
+    if (defender.W > 1):
+        if (attacker.A == "D3"):
+            for die1 in range(1,4):
+                addProb(attacker, die1,   0, 1/3, 0, aseaow)
+        elif (attacker.A == "D6"):
+            for die1 in range(1,7):
+                addProb(attacker, die1,   0, 1/6, 0, aseaow)
+        elif (attacker.A == "D6+1"):
+            for die1 in range(1,7):
+                addProb(attacker, die1+1, 0, 1/6, 0, aseaow)
+        elif (attacker.A == "2D6"):
+            for die1 in range(1,7):
+                for die2 in range(1,7):
+                    addProb(attacker, die1+die2, 0, 1/36, 0, aseaow)
+        else:
+            addProb(attacker, int(attacker.A), 0, 1.0, 0, aseaow)
     else:
-        addProb(int(aa), 0, 1.0, 0, extraAttacksOnWound)
+        addProb(attacker, 1, 0, 1.0, 0, aseaow)
 
 
-def addProb(attacks, eattacks, cumProb, cumWound, ea):
+
+def addProb(attacker, attacks, eattacks, cumProb, cumWound, ea):
     # This is a recursive function that calls itself to populate the number of attacks
     
-    global extraAttacksOnWound
-
     if (attacks > 0):
-        if extraAttacksOnWound:
+        if attacker.special.extraAttacksOnWound:
             for wound in range(0, woundWaTable[3][4]+1):
-                addProb(attacks-1,
+                addProb(attacker, 
+                        attacks-1,
                         eattacks + wound*ea,
                         cumProb  * woundWaTable[wound][1],
                         cumWound + wound,
                         ea)
         else:
             for wound in range(0, woundMwTable[3][4]+1):
-                addProb(attacks-1,
+                addProb(attacker, 
+                        attacks-1,
                         0,
                         cumProb  * woundMwTable[wound][1],
                         cumWound + wound,
@@ -767,7 +662,8 @@ def addProb(attacks, eattacks, cumProb, cumWound, ea):
 
     elif (eattacks > 0):
         for wound in range(0, woundWaTable[3][4]+1):
-            addProb(0,
+            addProb(attacker, 
+                    0,
                     eattacks-1,
                     cumProb  * woundWaTable[wound][1],
                     cumWound + wound,
@@ -775,21 +671,21 @@ def addProb(attacks, eattacks, cumProb, cumWound, ea):
     else:
         woundTotTable[cumWound][1] += cumProb
         woundTotTable[cumWound][2] += 1
-        if(amw == "D3"):
+        if(attacker.special.multiple == "D3"):
             for die9 in range(1,4):
                 woundMw2Table[cumWound*die9][1] += cumProb*1/3
                 woundMw2Table[cumWound*die9][2] += 1
-        elif(amw == "D3+1"):
+        elif(attacker.special.multiple == "D3+1"):
             for die9 in range(1,4):
                 woundMw2Table[cumWound*(die9+1)][1] += cumProb*1/3
                 woundMw2Table[cumWound*(die9+1)][2] += 1
-        elif(amw == "D6"):
+        elif(attacker.special.multiple == "D6"):
             for die9 in range(1,7):
                 woundMw2Table[cumWound*die9][1] += cumProb*1/6
                 woundMw2Table[cumWound*die9][2] += 1
         else:
-            woundMw2Table[cumWound*int(amw)][1] += cumProb
-            woundMw2Table[cumWound*int(amw)][2] += 1
+            woundMw2Table[cumWound*int(attacker.special.multiple)][1] += cumProb
+            woundMw2Table[cumWound*int(attacker.special.multiple)][2] += 1
 
 
 def sumProb(array):

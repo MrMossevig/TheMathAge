@@ -12,9 +12,10 @@ class unit(object):
     def __init__(self,excelFile=None):       
 
         '''object data'''
-        assert excelFile is not None
-        self.excelFile = excelFile
-        self.readFrom = 'Excel'
+        if(excelFile):
+            self.excelFile = excelFile
+            self.readFrom = 'Excel'
+
         '''unit data'''
 
         self.faction = None
@@ -31,11 +32,13 @@ class unit(object):
         self.A = None
         self.LD = None
         self.AS = None #Armorsave
-        self.WS = None #Ward save        
+        self.WA = None #Ward save        
         self.rerolls = reRolls()
         self.toroll = toRoll()
         self.special = special()
+        self.bonus   = bonus()
 
+        
 
     def loadData(self,faction=None,name=None):
         assert faction is not None
@@ -123,11 +126,26 @@ class toRoll(object):
         
         
 class special(object):
-    def __init__(self,hit=0,wound=0,armour=0,ward=0):
-        self.hit = hit
-        self.wound = wound
-        self.armour = armour
-        self.ward = ward    
-    
+    def __init__(self,
+                 lethal              = False, # Lethal strike (AP6 on natural '6' to wound)
+                 multiple            = 1,     # Multiple wounds
+                 multipleOnLethal    = False, # Multiple wounds only on natural '6'
+                 extraAttacksOnWound = 0,     # Unsaved wounds generates extra attacks
+                 woundMin            = 2      # Minimum value you can wound on
+                 ):
+        # Special rules
+        self.lethal                = lethal
+        self.multiple              = multiple
+        self.multipleWoundOnLethal = multipleOnLethal
+        self.extraAttacksOnWound   = extraAttacksOnWound
+        self.woundMin              = woundMin
 
+    
+class bonus(object):
+    def __init__(self,hit=0,wound=0,armour=0,ward=0):
+        # Extra bonus for hitting/wounding/armour/ward
+        self.hit    = hit     # E.g. that elf shit
+        self.wound  = wound
+        self.armour = armour  # E.g. armour piercing
+        self.ward   = ward    
         
