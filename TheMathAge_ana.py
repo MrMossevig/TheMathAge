@@ -494,12 +494,21 @@ def printTables(verbose):
            100*(1-fivedice[13][3]),  100*(1-fivedice[14][3]), 100*(1-fivedice[15][3]), 100*(1-fivedice[16][3]), 100*(1-fivedice[17][3]), 100*(1-fivedice[18][3]), 
            fivedice[0][4], 100*fid_opchance[4][4]))
     
-    print("\nMiscast/OP\tOP %%\tAmnesia\tCD\tBitV")
-    print("1D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%" % (0, 0, 0, 0))
-    print("2D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%" % (100*twd_opchance[4][4], 0,       0,       0))
-    print("3D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%" % (100*thd_opchance[4][4], 100*1/3, 0,       0))
-    print("4D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%" % (100*fod_opchance[4][4], 100*2/3, 100*1/3, 0))
-    print("5D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%" % (100*fid_opchance[4][4], 100*3/3, 100*2/3, 100*1/3))
+    print("\nMiscast/OP\tAmnesia\tCD\tBitV")
+    print("1D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (0, 0, 0))
+    print("2D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (0,       0,       0))
+    print("3D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (thd_opchance[4][4]*100*1/3*0.5, 0,       0))
+    print("4D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fod_opchance[4][4]*100*2/3*0.5, fod_opchance[4][4]*100*1/3*0.5, 0))
+    print("5D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fid_opchance[4][4]*100*3/3*0.5, fid_opchance[4][4]*100*2/3*0.5, fid_opchance[4][4]*100*1/3*0.5))
+
+
+    print("\nThaumaturgy")
+    print("Miscast/OP\tAmnesia\tCD\tBitV")
+    print("1D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (0, 0, 0))
+    print("2D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (twd_opchance[4][4]*100*1/3*0.5, 0,       0))
+    print("3D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (thd_opchance[4][4]*100*2/3*0.5, thd_opchance[4][4]*100*1/3*0.5, 0))
+    print("4D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fod_opchance[4][4]*100*3/3*0.5, fod_opchance[4][4]*100*2/3*0.5, fod_opchance[4][4]*100*1/3*0.5))
+    print("5D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fid_opchance[4][4]*100*3/3*0.5, fid_opchance[4][4]*100*2/3*0.5, fid_opchance[4][4]*100*1/3*0.5))xb
 
 if __name__ == "__main__":
    main()
