@@ -32,13 +32,18 @@ characters =  [["eos-heavyinf",   3, 3, 3, 3, 1, 5, 7],
                ["eos-prelate",    5, 4, 4, 3, 2, 5, 7],
                ["eos-stank",      3, 6, 6, 7, 1, 1, 7],
                ["he-lionchariot", 5, 5, 4, 4, 2, 3, 7],
+               ["he-swordmasters",6, 3, 3, 1, 2, 5, 7],
+               ["koe-archer",     3, 3, 3, 1, 1, 6, 6],
                ["koe-duke",       6, 4, 4, 3, 4, 5, 6],
                ["koe-grail",      5, 4, 4, 1, 2, 2, 6],
                ["koe-horse",      3, 3, 3, 1, 1, 7, 7],
                ["koe-paladin",    5, 4, 4, 3, 3, 5, 6],
                ["koe-questing",   4, 4, 3, 1, 1, 2, 6],
                ["koe-realm",      4, 4, 3, 1, 1, 2, 6],
+               ["ok-tribesmen",   3, 4, 4, 3, 3, 6, 7],
+               ["ok-bruisers",    3, 4, 4, 3, 3, 5, 7],
                ["sa-saurus",      3, 4, 4, 1, 2, 4, 7],
+               ["sa-skink",       2, 3, 2, 1, 1, 5, 7],
                ["sa-stygiosaur",  4, 5, 5, 5, 4, 3, 7],
                ["sa-taurosaur",   3, 6, 6, 6, 4, 3, 7],
                ["ud-dreadsphinx", 5, 6, 8, 5, 4, 4, 7]]
@@ -552,11 +557,16 @@ def populateFromCmdLine(attacker, defender, args):
     return verbose
 
 def overrideRollsFromCmdLine(attacker, defender, args):
+    global tohit
+    global towound
+    global armourroll
+    global wardroll
+
     if(args.to_hit    ):
         tohit      = int(args.to_hit[0]    )
         if(len(args.to_hit) > 1):
             rr    = parseRrArgs(args.to_hit[1])
-            if(hit_rr < 0):
+            if(rr < 0):
                 defender.rerolls.hit = rr
             else:
                 attacker.rerolls.hit = rr
@@ -621,13 +631,13 @@ def parseCharacter(attacker, defender, verbose):
             found_target = True
             
     if(not found_attacker):
-        print("Could not find attacker '%s'. Using default values." % aname)
+        print("Could not find attacker '%s'. Using default values." % attacker.name)
         attacker.WS = 3
         attacker.S  = 3
         attacker.A  = 1
 
     if(not found_target):
-        print("Could not find target '%s'. Using default values." % tname)
+        print("Could not find target '%s'. Using default values." % defender.name)
         defender.WS = 3
         defender.T  = 3
         defender.W  = 1
@@ -732,6 +742,9 @@ def parseKit(attacker, defender, kit, verbose):
         elif (item == "thunder"):
             print("Thunderous Charge")
             defender.S += 1
+        elif (item == "AP1"):
+            print("Armour Piercing(1)")
+            attacker.bonus.armour +=1
 
 if __name__ == "__main__":
    main()
