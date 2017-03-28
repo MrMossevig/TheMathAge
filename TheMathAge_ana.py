@@ -508,7 +508,7 @@ def printTables(verbose):
     print("2D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (twd_opchance[4][4]*100*1/3*0.5, 0,       0))
     print("3D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (thd_opchance[4][4]*100*2/3*0.5, thd_opchance[4][4]*100*1/3*0.5, 0))
     print("4D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fod_opchance[4][4]*100*3/3*0.5, fod_opchance[4][4]*100*2/3*0.5, fod_opchance[4][4]*100*1/3*0.5))
-    print("5D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fid_opchance[4][4]*100*3/3*0.5, fid_opchance[4][4]*100*2/3*0.5, fid_opchance[4][4]*100*1/3*0.5))xb
+    print("5D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fid_opchance[4][4]*100*3/3*0.5, fid_opchance[4][4]*100*2/3*0.5, fid_opchance[4][4]*100*1/3*0.5))
 
 if __name__ == "__main__":
    main()
