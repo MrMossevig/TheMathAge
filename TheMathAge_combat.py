@@ -24,16 +24,18 @@ DO NOT USE:
 
 import copy
 import argparse
+import math
 from unit_objects import unit
 
 # ws, s, t, w, a, as, wa
-characters =  [["eos-heavyinf",   3, 3, 3, 3, 1, 5, 7],
+characters =  [["eos-heavyinf",   3, 3, 3, 1, 1, 5, 7],
                ["eos-marshal",    5, 4, 4, 3, 3, 4, 7],
                ["eos-prelate",    5, 4, 4, 3, 2, 5, 7],
                ["eos-stank",      3, 6, 6, 7, 1, 1, 7],
                ["he-lionchariot", 5, 5, 4, 4, 2, 3, 7],
                ["he-swordmasters",6, 3, 3, 1, 2, 5, 7],
                ["koe-archer",     3, 3, 3, 1, 1, 6, 6],
+               ["koe-aspirant",   3, 3, 3, 1, 1, 2, 6],
                ["koe-duke",       6, 4, 4, 3, 4, 5, 6],
                ["koe-grail",      5, 4, 4, 1, 2, 2, 6],
                ["koe-horse",      3, 3, 3, 1, 1, 7, 7],
@@ -120,8 +122,6 @@ def main(attacker=None,defender=None):
         woundTotTable.append([0,0,0,0,0]);
         woundTotTable[i][0] =i 
 
-    woundMw2Table  =  copy.deepcopy(woundTotTable)
-
     resolveCombat(attacker, defender, verbose)
     sumProb(hitTable)
     sumProb(woundTable)
@@ -130,7 +130,6 @@ def main(attacker=None,defender=None):
     sumProb(woundMwTable) # This applies multiple wounds for "Multiple Wounds on Lethal"
     multiplyAttacks(attacker, defender)
     sumProb(woundTotTable)
-    sumProb(woundMw2Table)  # While if you have extra attacks, you need to add multiple wounds after extra attacks    
 
     if (verbose):
         print("To Hit:")
@@ -145,16 +144,10 @@ def main(attacker=None,defender=None):
         printStats(woundMwTable)
         print("Total Probability for wounds")
         printStats(woundTotTable)
-        print("Multiple Wounds added after extra attacks:")
-        printStats(woundMw2Table)
 
     tw = defender.W
-    if(attacker.special.extraAttacksOnWound):
-        print('wound:\t%s+\tAVG' % '+\t'.join('{:d}'.format(e) for e in [row[0] for row in woundMw2Table[:(tw+1)]]))
-        print('prob:\t%s\t%.3f' % ('\t'.join('{:.3f}'.format(e) for e in [row[3] for row in woundMw2Table[:(tw+1)]]), woundMw2Table[0][4]))
-    else:
-        print('wound:\t%s+\tAVG' % '+\t'.join('{:d}'.format(e) for e in [row[0] for row in woundTotTable[:(tw+1)]]))
-        print('prob:\t%s\t%.3f' % ('\t'.join('{:.3f}'.format(e) for e in [row[3] for row in woundTotTable[:(tw+1)]]), woundTotTable[0][4]))
+    print('wound:\t%s+\tAVG' % '+\t'.join('{:d}'.format(e) for e in [row[0] for row in woundTotTable[:(tw+1)]]))
+    print('prob:\t%s\t%.3f' % ('\t'.join('{:.3f}'.format(e) for e in [row[3] for row in woundTotTable[:(tw+1)]]), woundTotTable[0][4]))
 
 hitStats = [[4,3,3,3,3,3,3,3,3,3],
             [4,4,3,3,3,3,3,3,3,3],
@@ -321,30 +314,35 @@ def resolveCombat(attacker, defender, verbose):
                                         woundWaTable[1][2] += 1
                                     
                                     # Ninth die, multiple attacks
-                                    asmw = attacker.special.multiple
-                                    if(((not attacker.special.multipleWoundOnLethal) or lethal2) and
+                                    asmw = attacker.special.multipleWoundOnLethal
+                                    if(asmw and
                                        (defender.W > 1)):
-                                        if(asmw == "D3"):
-                                            for die9 in range(1,4):
-                                                prob9 = prob8   * prob*2
-                                                woundMwTable[die9][1] += prob9
-                                                woundMwTable[die9][2] += 1
-                                        elif(asmw == "D3+1"):
-                                            for die9 in range(1,4):
-                                                prob9 = prob8   * prob*2
-                                                woundMwTable[(die9+1)][1] += prob9
-                                                woundMwTable[(die9+1)][2] += 1
-                                        elif(asmw == "D6"):
-                                            for die9 in range(1,7):
-                                                prob9 = prob8   * prob
-                                                woundMwTable[die9][1] += prob9
-                                                woundMwTable[die9][2] += 1
+                                        if lethal2:
+                                            if(asmw == "D3"):
+                                                for die9 in range(1,4):
+                                                    prob9 = prob8   * prob*2
+                                                    woundMwTable[die9][1] += prob9
+                                                    woundMwTable[die9][2] += 1
+                                            elif(asmw == "D3+1"):
+                                                for die9 in range(1,4):
+                                                    prob9 = prob8   * prob*2
+                                                    woundMwTable[(die9+1)][1] += prob9
+                                                    woundMwTable[(die9+1)][2] += 1
+                                            elif(asmw == "D6"):
+                                                for die9 in range(1,7):
+                                                    prob9 = prob8   * prob
+                                                    woundMwTable[die9][1] += prob9
+                                                    woundMwTable[die9][2] += 1
+                                            else:
+                                                # Default case
+                                                woundMwTable[int(asmw)][1] += prob8
+                                                woundMwTable[int(asmw)][2] += 1
                                         else:
-                                            # Default case
-                                            woundMwTable[int(asmw)][1] += prob8
-                                            woundMwTable[int(asmw)][2] += 1
+                                            # If multipleWoundOnLethal and not lethal
+                                            woundMwTable[1][1] += prob8
+                                            woundMwTable[1][2] += 1
                                     else:
-                                        # If multipleWoundOnLethal and not lethal
+                                        # We'll deal with MW later
                                         woundMwTable[1][1] += prob8
                                         woundMwTable[1][2] += 1
 
@@ -384,80 +382,154 @@ def closeLoop(level, prob):
 
 def multiplyAttacks(attacker, defender):
     # Multiplying attacks to see how many wounds the model/unit makes
-    aseaow = attacker.special.extraAttacksOnWound
-    if (defender.W > 1):
-        if (attacker.A == "D3"):
-            for die1 in range(1,4):
-                addProb(attacker, die1,   0, 1/3, 0, aseaow)
-        elif (attacker.A == "D6"):
-            for die1 in range(1,7):
-                addProb(attacker, die1,   0, 1/6, 0, aseaow)
-        elif (attacker.A == "D6+1"):
-            for die1 in range(1,7):
-                addProb(attacker, die1+1, 0, 1/6, 0, aseaow)
-        elif (attacker.A == "2D6"):
-            for die1 in range(1,7):
-                for die2 in range(1,7):
-                    addProb(attacker, die1+die2, 0, 1/36, 0, aseaow)
-        else:
-            addProb(attacker, int(attacker.A), 0, 1.0, 0, aseaow)
+    if (attacker.A == "D3"):
+        for die1 in range(1,4):
+            addProb(attacker, defender, die1,   0, 1/3, 0)
+    if (attacker.A == "D3+1"):
+        for die1 in range(1,4):
+            addProb(attacker, defender, die1+1,   0, 1/3, 0)
+    elif (attacker.A == "D6"):
+        for die1 in range(1,7):
+            addProb(attacker, defender, die1,   0, 1/6, 0)
+    elif (attacker.A == "D6+1"):
+        for die1 in range(1,7):
+            addProb(attacker, defender, die1+1, 0, 1/6, 0)
+    elif (attacker.A == "2D6"):
+        for die1 in range(1,7):
+            for die2 in range(1,7):
+                addProb(attacker, defender, die1+die2, 0, 1/36, 0)
     else:
-        addProb(attacker, 1, 0, 1.0, 0, aseaow)
+        addProb(attacker, defender, int(attacker.A), 0, 1.0, 0)
 
 
-
-def addProb(attacker, attacks, eattacks, cumProb, cumWound, ea):
+def addProb(attacker, defender, attacks, eattacks, cumProb, cumWound):
     # This is a recursive function that calls itself to populate the number of attacks
     global woundWaTable
     global woundMwTable
-    global woundMw2Table
     global woundTotTable
 
-    if (attacks > 0):
-        if attacker.special.extraAttacksOnWound:
-            for wound in range(0, woundWaTable[3][4]+1):
-                addProb(attacker, 
-                        attacks-1,
-                        eattacks + wound*ea,
-                        cumProb  * woundWaTable[wound][1],
-                        cumWound + wound,
-                        ea)
-        else:
+    asm    = attacker.special.multiple
+    asmwol = attacker.special.multipleWoundOnLethal
+    aseaow = attacker.special.extraAttacksOnWound
+
+    if (aseaow or asmwol):
+        if (attacks > 0):
             for wound in range(0, woundMwTable[3][4]+1):
-                addProb(attacker, 
-                        attacks-1,
-                        0,
-                        cumProb  * woundMwTable[wound][1],
-                        cumWound + wound,
-                        0)
+                if ((defender.W) > 1 and asm and wound):
+                    if(asm == "D3"):
+                        for die9 in range(1,4):
+                            addProb(attacker,
+                                    defender, 
+                                    attacks-1,
+                                    eattacks + wound*aseaow,
+                                    cumProb  * woundMwTable[wound][1]*1/3,
+                                    cumWound + wound*die9)
+                    elif(asm == "D3+1"):
+                        for die9 in range(1,4):
+                            addProb(attacker,
+                                    defender, 
+                                    attacks-1,
+                                    eattacks + wound*aseaow,
+                                    cumProb  * woundMwTable[wound][1]*1/3,
+                                    cumWound + wound*(die9+1))
+                    elif(asm == "D6"):
+                        for die9 in range(1,7):
+                            addProb(attacker,
+                                    defender, 
+                                    attacks-1,
+                                    eattacks + wound*aseaow,
+                                    cumProb  * woundMwTable[wound][1]*1/6,
+                                    cumWound + wound*die9)
+                    else:
+                        addProb(attacker,
+                                defender, 
+                                attacks-1,
+                                eattacks + wound*aseaow,
+                                cumProb  * woundMwTable[wound][1],
+                                cumWound + wound*int(asm))
+                else:
+                    addProb(attacker,
+                            defender,
+                            attacks-1,
+                            eattacks + wound*aseaow,
+                            cumProb  * woundMwTable[wound][1],
+                            cumWound + wound)
 
-    elif (eattacks > 0):
-        for wound in range(0, woundWaTable[3][4]+1):
-            addProb(attacker, 
-                    0,
-                    eattacks-1,
-                    cumProb  * woundWaTable[wound][1],
-                    cumWound + wound,
-                    0)
-    else:
-        woundTotTable[cumWound][1] += cumProb
-        woundTotTable[cumWound][2] += 1
-        if(attacker.special.multiple == "D3"):
-            for die9 in range(1,4):
-                woundMw2Table[cumWound*die9][1] += cumProb*1/3
-                woundMw2Table[cumWound*die9][2] += 1
-        elif(attacker.special.multiple == "D3+1"):
-            for die9 in range(1,4):
-                woundMw2Table[cumWound*(die9+1)][1] += cumProb*1/3
-                woundMw2Table[cumWound*(die9+1)][2] += 1
-        elif(attacker.special.multiple == "D6"):
-            for die9 in range(1,7):
-                woundMw2Table[cumWound*die9][1] += cumProb*1/6
-                woundMw2Table[cumWound*die9][2] += 1
+        elif (eattacks > 0):
+            for wound in range(0, woundWaTable[3][4]+1):
+                if ((defender.W) > 1 and asm and wound):
+                    if(asm == "D3"):
+                        for die9 in range(1,4):
+                            addProb(attacker,
+                                    defender, 
+                                    0,
+                                    eattacks-1,
+                                    cumProb  * woundMwTable[wound][1]*1/3,
+                                    cumWound + wound*die9)
+                    elif(asm == "D3+1"):
+                        for die9 in range(1,4):
+                            addProb(attacker,
+                                    defender, 
+                                    0,
+                                    eattacks-1,
+                                    cumProb  * woundMwTable[wound][1]*1/3,
+                                    cumWound + wound*(die9+1))
+                    elif(asm == "D6"):
+                        for die9 in range(1,7):
+                            addProb(attacker,
+                                    defender, 
+                                    0,
+                                    eattacks-1,
+                                    cumProb  * woundMwTable[wound][1]*1/6,
+                                    cumWound + wound*die9)
+                    else:
+                        addProb(attacker,
+                                defender, 
+                                0,
+                                eattacks-1,
+                                cumProb  * woundMwTable[wound][1],
+                                cumWound + wound*int(asm))
+                else:
+                    addProb(attacker,
+                            defender, 
+                            0,
+                            eattacks-1,
+                            cumProb  * woundMwTable[wound][1],
+                            cumWound + wound)
         else:
-            woundMw2Table[cumWound*int(attacker.special.multiple)][1] += cumProb
-            woundMw2Table[cumWound*int(attacker.special.multiple)][2] += 1
+            woundTotTable[cumWound][1] += cumProb
+            woundTotTable[cumWound][2] += 1
 
+    else:
+        # Doing it the easy way
+        for wound in range(0, attacks):
+            comb = (math.factorial(attacks) /
+                    (math.factorial(attacks-wound)*math.factorial(wound)))
+            prob = ((woundMwTable[0][1]**(attacks-wound)) * 
+                    (woundMwTable[1][1]**wound) *
+                    cumProb)
+            if ((asm != 1) and (defender.W > 1) and (wound > 0)):
+                for i in range(0, wound):
+                    prob1 = comb * prob/wound
+                    if(asm == "D3"):
+                        for die9 in range(1,4):
+                            woundTotTable[wound * die9][1] += prob1 * 1/3
+                            woundTotTable[wound * die9][2] += 1
+                    elif(asm == "D3+1"):
+                        for die9 in range(1,4):
+                            woundTotTable[wound * (die9+1)][1] += prob1 * 1/3
+                            woundTotTable[wound * (die9+1)][2] += 1
+                    elif(asm == "D6"):
+                        for die9 in range(1,7):
+                            woundTotTable[wound * die9][1] += prob1 * 1/6
+                            woundTotTable[wound * die9][2] += 1
+                    else:
+                        # Default case
+                        woundTotTable[wound * int(asm)][1] += prob1
+                        woundTotTable[wound * int(asm)][2] += 1
+            else:
+                woundTotTable[wound][1] += prob*comb
+                woundTotTable[wound][2] += 1
 
 def sumProb(array):
     sum_p = 0
@@ -661,8 +733,7 @@ def parseKit(attacker, defender, kit, verbose):
         elif (item == "renown"):
             print("Virtue: Renown")
             attacker.special.lethal       = True
-            attacker.special.multiple     = "D3+1"
-            attacker.special.multipleWoundOnLethal = True
+            attacker.special.multipleWoundOnLethal = "D3+1"
         elif (item == "qo"):
             print("Oath: Questing Oath")
             attacker.special.multiple = 2
@@ -741,7 +812,10 @@ def parseKit(attacker, defender, kit, verbose):
         # Other
         elif (item == "thunder"):
             print("Thunderous Charge")
-            defender.S += 1
+            attacker.S += 1
+        elif (item == "frenzy"):
+            print("Frenzy")
+            attacker.A += 1
         elif (item == "AP1"):
             print("Armour Piercing(1)")
             attacker.bonus.armour +=1
