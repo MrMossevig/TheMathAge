@@ -145,9 +145,10 @@ def main(attacker=None,defender=None):
         print("Total Probability for wounds")
         printStats(woundTotTable)
 
-    tw = defender.W
-    print('wound:\t%s+\tAVG' % '+\t'.join('{:d}'.format(e) for e in [row[0] for row in woundTotTable[:(tw+1)]]))
-    print('prob:\t%s\t%.3f' % ('\t'.join('{:.3f}'.format(e) for e in [row[3] for row in woundTotTable[:(tw+1)]]), woundTotTable[0][4]))
+    tw = defender.W * defender.models
+    print('wound:\t%s+' % '+\t'.join('{:d}'.format(e) for e in [row[0] for row in woundTotTable[:(tw+1)]]))
+    print('prob:\t%s' % ('\t'.join('{:.3f}'.format(e) for e in [row[3] for row in woundTotTable[:(tw+1)]])))
+    print('AVG:\t%.3f' % woundTotTable[0][4])
 
 hitStats = [[4,3,3,3,3,3,3,3,3,3],
             [4,4,3,3,3,3,3,3,3,3],
@@ -382,24 +383,27 @@ def closeLoop(level, prob):
 
 def multiplyAttacks(attacker, defender):
     # Multiplying attacks to see how many wounds the model/unit makes
-    if (attacker.A == "D3"):
+    aa = attacker.A
+    am = attacker.models
+
+    if (aa == "D3"):
         for die1 in range(1,4):
-            addProb(attacker, defender, die1,   0, 1/3, 0)
-    if (attacker.A == "D3+1"):
+            addProb(attacker, defender, (die1  )*am,   0, 1/3, 0)
+    if (aa == "D3+1"):
         for die1 in range(1,4):
-            addProb(attacker, defender, die1+1,   0, 1/3, 0)
-    elif (attacker.A == "D6"):
+            addProb(attacker, defender, (die1+1)*am,   0, 1/3, 0)
+    elif (aa == "D6"):
         for die1 in range(1,7):
-            addProb(attacker, defender, die1,   0, 1/6, 0)
-    elif (attacker.A == "D6+1"):
+            addProb(attacker, defender, (die1  )*am,   0, 1/6, 0)
+    elif (aa == "D6+1"):
         for die1 in range(1,7):
-            addProb(attacker, defender, die1+1, 0, 1/6, 0)
-    elif (attacker.A == "2D6"):
+            addProb(attacker, defender, (die1+1)*am, 0, 1/6, 0)
+    elif (aa == "2D6"):
         for die1 in range(1,7):
             for die2 in range(1,7):
-                addProb(attacker, defender, die1+die2, 0, 1/36, 0)
+                addProb(attacker, defender, (die1+die2)*am, 0, 1/36, 0)
     else:
-        addProb(attacker, defender, int(attacker.A), 0, 1.0, 0)
+        addProb(attacker, defender, int(aa*am), 0, 1.0, 0)
 
 
 def addProb(attacker, defender, attacks, eattacks, cumProb, cumWound):
@@ -574,6 +578,7 @@ def ParseCmdLine():
     parser.add_argument("-tw",  "--target_wounds"     )
     parser.add_argument("-tas", "--target_armoursave" )
     parser.add_argument("-twa", "--target_wardsave"   )
+    parser.add_argument("-tmodels", "--target_models"   )
     
     parser.add_argument("-aname", "--attacker_name"     )
     parser.add_argument("-as" , "--attacker_strength"   )
@@ -581,6 +586,7 @@ def ParseCmdLine():
     parser.add_argument("-aa",  "--attacker_attacks"    ) # Can be D3, D6, D6+1, 2D6 or number
     parser.add_argument("-als", "--attacker_lethal"     )
     parser.add_argument("-amw", "--attacker_multiple"   )
+    parser.add_argument("-amodels", "--attacker_models"   )
     
     parser.add_argument("-kit", "--kit", nargs='*'   ) # list of kit. If e.g. lance it assumes charge and gives +2 strength
     
@@ -614,11 +620,14 @@ def populateFromCmdLine(attacker, defender, args):
     if(args.target_wounds       ): defender.W  = int(args.target_wounds       )
     if(args.target_armoursave   ): defender.AS = int(args.target_armoursave   )
     if(args.target_wardsave     ): defender.WA = int(args.target_wardsave     )
+    if(args.target_models       ): defender.models = int(args.target_models     )
+
 
     if(args.attacker_strength    ): attacker.S  = int(args.attacker_strength    )
     if(args.attacker_weaponskill ): attacker.WS = int(args.attacker_weaponskill )
     if(args.attacker_attacks     ): attacker.A  = args.attacker_attacks
     if(args.attacker_lethal      ): attacker.special.lethal = bool(int(args.attacker_lethal))
+    if(args.attacker_models      ): attacker.models = int(args.attacker_models     )
 
     if(args.attacker_multiple    ):
         try:
@@ -685,6 +694,8 @@ def parseCharacter(attacker, defender, verbose):
 
     found_attacker = False
     found_target   = False
+    attacker.models = 1
+    defender.models = 1
 
     for row in characters:
         if(row[0] == attacker.name):

@@ -34,9 +34,10 @@ class unit(object):
         self.AS = None #Armorsave
         self.WA = None #Ward save        
         self.rerolls = reRolls()
-        self.toroll = toRoll()
+        self.toroll  = toRoll()
         self.special = special()
         self.bonus   = bonus()
+        self.models  = None # Number of models in unit
 
         
 
