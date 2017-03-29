@@ -31,7 +31,7 @@ class unit(object):
         self.A = None
         self.LD = None
         self.AS = None #Armorsave
-        self.WS = None #Ward save        
+        self.WA = None #Ward save        
         self.rerolls = reRolls()
         self.toroll = toRoll()
         self.special = special()
@@ -93,7 +93,7 @@ class unit(object):
                     self.A = int(row_slice[8])
                     self.LD = int(row_slice[9])
                     self.AS = int(row_slice[10])
-                    self.WS = int(row_slice[11])
+                    self.WA = int(row_slice[11])
                     self.rerolls.hit = int(row_slice[12])
                     self.rerolls.wound = int(row_slice[13])
                     self.rerolls.armour = int(row_slice[14])
