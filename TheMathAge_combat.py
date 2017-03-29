@@ -19,7 +19,7 @@ Or if you just want to input the die-rolls directly:
 python TheMathAge_combat.py -tohit 2 -towound 3 rro -armourroll 4 -wardroll 6 -aa 10 -tw 10
 
 DO NOT USE:
-2D6 attacks combined with D3/D6 multiple wounds. It will crash and burn. Unless you're using a supercomputer.
+Extra attacks on wound (Dragon Lance) or Multiple Wound on Lethal (Blessed sword) with more than 5 attacks. It will crash and burn. Unless you're using a supercomputer.
 '''
 
 import copy
