@@ -65,7 +65,8 @@ def main(attacker=None,defender=None):
         args    = ParseCmdLine()
         verbose = populateFromCmdLine(attacker, defender, args)
 
-    print("Verbose(-v): %d" % verbose)
+    if verbose != 1:
+        print("Verbose(-v): %d" % verbose)
 
     # Calculating to-hit, to wound rolls
     global tohit
@@ -167,7 +168,7 @@ def calcDice(attacker, defender, verbose):
     global armourroll
     global wardroll
 
-    # To hit, lookup table
+    # To hit, lookup table    
     tohit      = hitStats[defender.WS][attacker.WS] + attacker.bonus.hit + defender.bonus.hit
 
     # To wound, can never be better than 2+ or worse than 6+
@@ -558,7 +559,7 @@ def printStats(array):
     # Here we will print the wound statistics
     for entry in array:
         statcurve = ''
-        for p in range(1, round(entry[1]*100)):
+        for p in range(1, int(round(entry[1]*100))):
             statcurve += 'X'
         if (entry[1] != 0):
             print("%d\t%d\t%.4f\t%.4f\t%s" % (entry[0], entry[2], entry[1], entry[3], statcurve))

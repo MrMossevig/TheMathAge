@@ -11,13 +11,15 @@ if __name__ == '__main__':
     pass
 
 
-defender= unit(excelFile='Unit_Data.xlsx')
-attacker = unit(excelFile='Unit_Data.xlsx')
+defender= unit(XML=True,models=10)
+attacker = unit(XML=True,models = 10)
 
-defender.loadData(faction='SA', name='Saurian Warriors')
-attacker.loadData(faction='SA', name='Caiman')
+attacker.loadData(factionFileName='2.0 Kingdom of Equitaine', name='Duke')
+defender.loadData(factionFileName='2.0 Saurian Ancients', name='Saurian Warriors')
+
+
 
 '''NO INPUT BELOW HERE'''       
 
 TheMathAge_combat.main(attacker, defender) 
-#TheMathAge_combat.main(attacker=None, defender=None)
+
