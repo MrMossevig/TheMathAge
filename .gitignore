@@ -1,0 +1,4 @@
+# Exclude compiled python files
+*.pyc
+# Exclude emacs working copies
+*.py~
