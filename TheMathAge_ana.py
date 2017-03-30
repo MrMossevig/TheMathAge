@@ -72,6 +72,7 @@ def createTables(sides):
     # Drop low/high
     global thd_droplow  
     global thd_drophigh 
+    global fod_droplow
 
     # Reroll, take highest
     global twd_rr       
@@ -112,6 +113,7 @@ def createTables(sides):
     # Drop low/high
     thd_droplow   = copy.deepcopy(diearray)
     thd_drophigh  = copy.deepcopy(diearray)
+    fod_droplow   = copy.deepcopy(diearray)
 
     # Reroll, take highest
     twd_rr       = copy.deepcopy(diearray)
@@ -225,6 +227,11 @@ def createTables(sides):
                     twd_rr[result_rr][1] += prob4
                     twd_rr[result_rr][2] += 1
     
+                    # Add result to drop-low (Swiftstride)
+                    result_dl4 = result4 - min(die1, die2, die3, die4)
+                    fod_droplow[result_dl4][1] += prob4
+                    fod_droplow[result_dl4][2] += 1
+
                     # Fifth die
                     for die5 in range(1,sides+1):
                         result5 = result4 + die5
@@ -301,6 +308,7 @@ def createTables(sides):
     # Drop high/low
     sum_prob(thd_droplow)
     sum_prob(thd_drophigh)
+    sum_prob(fod_droplow)
     # Reroll all
     sum_prob(twd_rr)
     sum_prob(thd_dl_rr)
@@ -342,7 +350,10 @@ def printTables(verbose):
     
         print("\n3D6 drop high:")
         print_prob(thd_drophigh)
-    
+
+        print("\n4D6 drop low:")
+        print_prob(fod_droplow)
+        
         print("\n2D6, reroll, take highest:")
         print_prob(twd_rr)
     
@@ -433,7 +444,11 @@ def printTables(verbose):
            100*(1-thd_dl_d3[2][3]), 100*(1-thd_dl_d3[3][3]), 100*(1-thd_dl_d3[4][3]), 100*(1-thd_dl_d3[5][3]),  100*(1-thd_dl_d3[6][3]),
            100*(1-thd_dl_d3[7][3]), 100*(1-thd_dl_d3[8][3]), 100*(1-thd_dl_d3[9][3]), 100*(1-thd_dl_d3[10][3]), 100*(1-thd_dl_d3[11][3]),
            thd_dl_d3[0][4]))
-
+    print("SS+ToT\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f" %
+          (100,
+           100*(1-fod_droplow[2][3]), 100*(1-fod_droplow[3][3]), 100*(1-fod_droplow[4][3]), 100*(1-fod_droplow[5][3]),  100*(1-fod_droplow[6][3]), 
+           100*(1-fod_droplow[7][3]), 100*(1-fod_droplow[8][3]), 100*(1-fod_droplow[9][3]), 100*(1-fod_droplow[10][3]), 100*(1-fod_droplow[11][3]),
+           fod_droplow[0][4]))
     #print("SS+BotS+RR\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f" %
     #      (100,
     #       100*(1-thd_rro_dl[2][3]**2), 100*(1-thd_rro_dl[3][3]**2), 100*(1-thd_rro_dl[4][3]**2), 100*(1-thd_rro_dl[5][3]**2),  100*(1-thd_rro_dl[6][3]**2),
