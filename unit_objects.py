@@ -3,6 +3,7 @@ Created on 17. mar. 2017
 
 @author: tsy
 '''
+from rules import rules
 
 class unit(object):
     '''
@@ -42,10 +43,10 @@ class unit(object):
         self.toroll  = toRoll()
         self.special = special()
         self.bonus   = bonus()
-        
+        self.rules = []
 
     def load_XML_basic_data(self):
-               
+        #subfunction of loadData
         from catToPy import charsToDict 
         
         #Load a dictionary data set from XML  
@@ -62,17 +63,20 @@ class unit(object):
         self.LD = d['LD']
         self.AS = d['ArmourSave']
         self.WA = d['WardSave']
-
+        self.rules = []
+        self.XMLrules=None
     
     def load_XML_special_rules(self):
+        #subfunction of loadData
         from catToPy import rulesToList         
         from catToPy import rulesInterpreter
         ruleList = rulesToList(name = self.name,filename=self.factionFileName)        
-        ruleDict = rulesInterpreter(filename=self.factionFileName,ruleList=ruleList)
-        for n in ruleDict:
-            print(n)
+        ruleDict = rulesInterpreter(filename=self.factionFileName,ruleList=ruleList)        
+        self.XMLrules = None 
+    
     
     def loadData(self,name=None,factionFileName=None):
+        ''' Main function to read in unit/model data''' 
         assert name is not None
                
         self.name = name
@@ -82,7 +86,22 @@ class unit(object):
         if self.readFrom is 'XML':
             self.load_XML_basic_data()
             self.load_XML_special_rules()
-            
+    
+    def employRules(self,ruleList):
+        #ruleList is name of rules (e.g. "Shield", "Halberd", "Innate Defence (5+)" etc
+      
+        #import rules 
+        ruleDict = rules()
+        ruleDict.makefullDict() 
+        
+        for rule in ruleList:
+            try: 
+                exec(ruleDict.fullDict[rule]) #ok                
+                self.rules.append(rule)
+            except KeyError:
+                print('\n%s is not found in Dictionaries!\n'%rule)
+                import time
+                time.sleep(2)
         
 class reRolls(object):
     def __init__(self,hit=0,wound=0,armour=0,ward=0):
@@ -105,14 +124,16 @@ class special(object):
                  multiple            = 1,     # Multiple wounds
                  multipleOnLethal    = False, # Multiple wounds only on natural '6'
                  extraAttacksOnWound = 0,     # Unsaved wounds generates extra attacks
-                 woundMin            = 2      # Minimum value you can wound on
+                 woundMin            = 2,      # Minimum value you can wound on
+                 fireborn            =False
                  ):
         # Special rules
         self.lethal                = lethal
         self.multiple              = multiple
         self.multipleWoundOnLethal = multipleOnLethal
         self.extraAttacksOnWound   = extraAttacksOnWound
-        self.woundMin              = woundMin
+        self.woundMin               = woundMin
+        self.fireborn               =fireborn
 
     
 class bonus(object):
