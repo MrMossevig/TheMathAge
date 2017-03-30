@@ -84,11 +84,15 @@ def main(attacker=None,defender=None):
         print("Target Toughness    (-tt) : %s" % defender.T )
         print("Target Armour Save  (-tas): %s" % defender.AS)
         print("Target Ward Save    (-twa): %s" % defender.WA)
-                 
+        print("Target Wounds       (-tw) : %s" % defender.W )
+        print("Target Models   (-tmodels): %s" % defender.models)
+        print("");
+
         print("Attacker Weapon Skill  (-aws): %s" % attacker.WS)
         print("Attacker Strength      (-as) : %s" % attacker.S )
         print("Attacker Attacks       (-aa) : %s" % attacker.A )
-        print("Attacker Lethal Strike (-als : %s" % attacker.special.lethal)
+        print("Attacker Models    (-amodels): %s" % attacker.models)
+        print("Attacker Lethal Strike (-als): %s" % attacker.special.lethal)
         print("Attacker Multiple W    (-amw): %s" % attacker.special.multiple)
         print("");
 
