@@ -72,7 +72,7 @@ class unit(object):
         from catToPy import rulesInterpreter
         ruleList = rulesToList(name = self.name,filename=self.factionFileName)        
         ruleDict = rulesInterpreter(filename=self.factionFileName,ruleList=ruleList)        
-        self.XMLrules = None 
+        self.XMLrules = ruleDict 
     
     
     def loadData(self,name=None,factionFileName=None):

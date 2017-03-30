@@ -31,8 +31,9 @@ def charsToDict(filename,name):
                             returnDict[char] = int(child2.attrib['value'][0])               
                         except ValueError:
                             returnDict[char] = None
-                            print('%s will be left as None for %s'%(char,child.attrib['name']))     
-            
+                            print('%s will be left as None for %s'%(char,child.attrib['name']))
+                        except IndexError:     
+                            pass
         print('\n')            
         return returnDict
 

@@ -16,9 +16,24 @@ class rules(object):
         '''
         self.gen = {'Thunderous Charge':'self.S+=1',
              'Frenzy':'self.A +=1',
-             'AP1':'self.bonus.armor +=1'
+             'AP1':'self.bonus.armour +=1',
+             'Innate Defence (2+)':'self.AS-=5',
+             'Innate Defence (3+)':'self.AS-=4',
+             'Innate Defence (4+)':'self.AS-=3',
+             'Innate Defence (5+)':'self.AS-=2',
+             'Innate Defence (6+)':'self.AS-=2',
+             'Multiple Wounds (D3)':'self.special.multiple="D3"',
+             'Lightning Reflexes':'self.bonus.hit -=1',
+             'Mounts Protection (6+)': 'self.AS-=1'
          }
  
+        self.SE = {
+                   'Forest Walker':'self.rerolls.wound=1',
+                   'Blades of Cenyrn - attack':'self.A+=1',
+                   'Sylvan Blades':'self.A+=1;self.bonus.armour+=1'
+                   
+        }
+        
         self.SA = {                                                                                 
              'Born Predator':'if self.rerolls.hit<1:self.rerolls.hit=1',
              'audacity':'self.rerolls.hit = 7; self.rerolls.wound = 7'                   
@@ -54,12 +69,15 @@ class rules(object):
                     'Great Weapon':'self.S+=2;self.I=0',
                     'Lance':'self.S+=2',
                     'Barding':'self.AS-=1',
-                    'spear':'self.bonus.armor +=1'
+                    'spear':'self.bonus.armour +=1',
+                    'Heavy Armor':'self.AS-=2'
          }
     def makefullDict(self):
         fullList = dict(self.gen)
         fullList.update(self.SA)
+        fullList.update(self.SE)
         fullList.update(self.KOE)
         fullList.update(self.magicItems)
         fullList.update(self.mundaneItems)
+        
         self.fullDict = fullList
