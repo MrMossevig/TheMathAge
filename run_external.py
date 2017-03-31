@@ -34,6 +34,7 @@ print(attacker.XMLrules)
 
 
 '''NO INPUT BELOW HERE'''       
+result = TheMathAge_combat.main(attacker, defender) 
 
-TheMathAge_combat.main(attacker, defender) 
+print("AVG: %.3f" % result[0][4])
 

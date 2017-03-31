@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 def charsToDict(filename,name):
     '''filename without extension'''    
     cwd = os.getcwd()    
-    os.chdir('The-9th-Age')
+    os.chdir(os.path.join(os.path.dirname(__file__), 'The-9th-Age'))
     
     tree  = ET.parse(filename+'.cat')
     root = tree.getroot()
@@ -52,7 +52,7 @@ def charsToDict(filename,name):
 def rulesToList(filename,name):
     'filename without extension'
     cwd = os.getcwd()    
-    os.chdir('The-9th-Age')
+    os.chdir(os.path.join(os.path.dirname(__file__), 'The-9th-Age'))
     
     tree  = ET.parse(filename+'.cat')
     root = tree.getroot()
@@ -85,7 +85,7 @@ def rulesInterpreter(filename=None,ruleList=None):
     assert filename is not None
     
     cwd = os.getcwd()    
-    os.chdir('The-9th-Age')
+    os.chdir(os.path.join(os.path.dirname(__file__), 'The-9th-Age'))
     
     tree  = ET.parse(filename+'.cat')
     root = tree.getroot()

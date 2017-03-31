@@ -38,7 +38,8 @@ class unit(object):
         self.LD = None
         self.AS = None          #Armorsave
         self.WA = None          #Ward save        
-        self.models  = models
+        self.models  = int( models )
+        self.totA    = int( models )
         self.rerolls = reRolls()
         self.toroll  = toRoll()
         self.special = special()
@@ -52,17 +53,17 @@ class unit(object):
         #Load a dictionary data set from XML  
         d = charsToDict(name = self.name,filename= self.factionFileName)
         
-        self.M = d['M']
-        self.WS = d['WS']
-        self.BS = d['BS']
-        self.S = d['S']
-        self.T = d['T']
-        self.W = d['W']
-        self.I = d['I']
-        self.A = d['A']
-        self.LD = d['LD']
-        self.AS = d['ArmourSave']
-        self.WA = d['WardSave']
+        self.M  = int( d['M']  )
+        self.WS = int( d['WS'] )
+        self.BS =      d['BS']   # Can be '-'
+        self.S  = int( d['S']  )
+        self.T  = int( d['T']  )
+        self.W  = int( d['W']  )
+        self.I  = int( d['I']  )
+        self.A  = int( d['A']  )
+        self.LD = int( d['LD'] )
+        self.AS =      d['ArmourSave']
+        self.WA =      d['WardSave']
         self.rules = []
         self.XMLrules=None
     
@@ -86,6 +87,8 @@ class unit(object):
         if self.readFrom is 'XML':
             self.load_XML_basic_data()
             self.load_XML_special_rules()
+
+        self.TotA = self.A * self.models
     
     def employRules(self,ruleList):
         #ruleList is name of rules (e.g. "Shield", "Halberd", "Innate Defence (5+)" etc

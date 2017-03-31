@@ -52,8 +52,8 @@ characters =  [["eos-heavyinf",   3, 3, 3, 1, 1, 5, 7],
 
 def main(attacker=None,defender=None):
     if (attacker is None and defender is None):
-        defender = unit()
-        attacker = unit()
+        defender = unit(models = 1)
+        attacker = unit(models = 1)
         getCharFromCmdLine = True
     else:
         '''alternative method of defining characteristics, from attacker/defender objects defined in parent environment'''
@@ -152,8 +152,9 @@ def main(attacker=None,defender=None):
 
     tw = defender.W * defender.models
     print('wound:\t%s+' % '+\t'.join('{:d}'.format(e) for e in [row[0] for row in woundTotTable[:(tw+1)]]))
-    print('prob:\t%s' % ('\t'.join('{:.3f}'.format(e) for e in [row[3] for row in woundTotTable[:(tw+1)]])))
+    print('prob:\t%s'  % '\t'.join('{:.3f}'.format(e) for e in [row[3] for row in woundTotTable[:(tw+1)]]))
     print('AVG:\t%.3f' % woundTotTable[0][4])
+    return woundTotTable
 
 hitStats = [[4,3,3,3,3,3,3,3,3,3],
             [4,4,3,3,3,3,3,3,3,3],
@@ -408,7 +409,7 @@ def multiplyAttacks(attacker, defender):
             for die2 in range(1,7):
                 addProb(attacker, defender, (die1+die2)*am, 0, 1/36, 0)
     else:
-        addProb(attacker, defender, int(aa*am), 0, 1.0, 0)
+        addProb(attacker, defender, attacker.totA, 0, 1.0, 0)
 
 
 def addProb(attacker, defender, attacks, eattacks, cumProb, cumWound):
@@ -420,7 +421,6 @@ def addProb(attacker, defender, attacks, eattacks, cumProb, cumWound):
     asm    = attacker.special.multiple
     asmwol = attacker.special.multipleWoundOnLethal
     aseaow = attacker.special.extraAttacksOnWound
-
     if (aseaow or asmwol):
         if (attacks > 0):
             for wound in range(0, woundMwTable[3][4]+1):
@@ -511,7 +511,7 @@ def addProb(attacker, defender, attacks, eattacks, cumProb, cumWound):
 
     else:
         # Doing it the easy way
-        for wound in range(0, attacks):
+        for wound in range(0, (attacks+1)):
             comb = (math.factorial(attacks) /
                     (math.factorial(attacks-wound)*math.factorial(wound)))
             prob = ((woundMwTable[0][1]**(attacks-wound)) * 
