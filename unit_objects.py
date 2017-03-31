@@ -51,19 +51,53 @@ class unit(object):
         from catToPy import charsToDict 
         
         #Load a dictionary data set from XML  
-        d = charsToDict(name = self.name,filename= self.factionFileName)
-        
-        self.M  = int( d['M']  )
-        self.WS = int( d['WS'] )
-        self.BS =      d['BS']   # Can be '-'
-        self.S  = int( d['S']  )
-        self.T  = int( d['T']  )
-        self.W  = int( d['W']  )
-        self.I  = int( d['I']  )
-        self.A  = int( d['A']  )
-        self.LD = int( d['LD'] )
-        self.AS =      d['ArmourSave']
-        self.WA =      d['WardSave']
+        d = charsToDict(name = self.name, filename= self.factionFileName)
+
+        # The characteristics are not properly defined for all units
+        try:
+            self.M  = int( d['M']  )
+        except:
+            self.M = 0
+        try:
+            self.WS = int( d['WS'] )
+        except:
+            self.WS = 0
+        try:
+            self.BS = int( d['BS'] )
+        except:
+            self.BS = 0
+        try:
+            self.S  = int( d['S']  )
+        except:
+            self.S  = 0
+        try:
+            self.T  = int( d['T']  )
+        except:
+            self.T  = 0
+        try:
+            self.W  = int( d['W']  )
+        except:
+            self.W  = 1
+        try:
+            self.I  = int( d['I']  )
+        except:
+            self.I  = 0
+        try:
+            self.A  = int( d['A']  )
+        except:
+            self.A  = 1
+        try:
+            self.LD = int( d['LD'] )
+        except:
+            self.LD = 0
+        try:
+            self.AS = int( d['ArmourSave'] )
+        except:
+            self.AS = 7
+        try:
+            self.WA = int( d['WardSave'] )
+        except:
+            self.WA = 7
         self.rules = []
         self.XMLrules=None
     
