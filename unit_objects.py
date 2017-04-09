@@ -122,7 +122,7 @@ class unit(object):
             self.load_XML_basic_data()
             self.load_XML_special_rules()
 
-        self.TotA = self.A * self.models
+        self.totA = self.A * self.models
     
     def employRules(self,ruleList):
         #ruleList is name of rules (e.g. "Shield", "Halberd", "Innate Defence (5+)" etc

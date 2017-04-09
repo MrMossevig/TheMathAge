@@ -425,7 +425,7 @@ def multiplyAttacks(attacker, defender):
     if (aa == "D3"):
         for die1 in range(1,4):
             addProb(attacker, defender, (die1  )*am,   aseaow, 1/3, 0)
-    if (aa == "D3+1"):
+    elif (aa == "D3+1"):
         for die1 in range(1,4):
             addProb(attacker, defender, (die1+1)*am,   aseaow, 1/3, 0)
     elif (aa == "D6"):
