@@ -28,6 +28,18 @@ def main():
     createTables(sides)
     printTables(verbose)
 
+def find_triples(array):
+    ordered = [0, 0, 0, 0, 0, 0, 0]
+    for number in array:
+        ordered[number] += 1
+
+    if(max(ordered) >= 3):
+        return True
+    else:
+        return False
+        
+    
+    
 def sum_prob(array):
     sum_p = 0
     sum_f = 0
@@ -73,15 +85,17 @@ def createTables(sides):
     global thd_droplow  
     global thd_drophigh 
     global fod_droplow
+    global fod_droptwolow
 
     # Reroll, take highest
     global twd_rr       
-    global thd_dl_rr    
+    global thd_dl_rr
+    global fod_dtl_rr
 
     # Reroll ones + drop low
     global thd_rro_dl
 
-    # Drop low, add d3 (SS + Audacity)
+    # Drop low, add d3 (SS + Daring)
     global thd_dl_d3
 
     # Magic throws
@@ -104,6 +118,8 @@ def createTables(sides):
     fourdice      = copy.deepcopy(diearray)
     fivedice      = copy.deepcopy(diearray)
     sixdice       = copy.deepcopy(diearray)
+    sevendice     = copy.deepcopy(diearray)
+    eightdice     = copy.deepcopy(diearray)
 
     # Reroll ones
     od_rerollone  = copy.deepcopy(diearray)
@@ -111,18 +127,20 @@ def createTables(sides):
     thd_rerollone = copy.deepcopy(diearray)
 
     # Drop low/high
-    thd_droplow   = copy.deepcopy(diearray)
-    thd_drophigh  = copy.deepcopy(diearray)
-    fod_droplow   = copy.deepcopy(diearray)
+    thd_droplow    = copy.deepcopy(diearray)
+    thd_drophigh   = copy.deepcopy(diearray)
+    fod_droplow    = copy.deepcopy(diearray)
+    fod_droptwolow = copy.deepcopy(diearray)
 
     # Reroll, take highest
     twd_rr       = copy.deepcopy(diearray)
     thd_dl_rr    = copy.deepcopy(diearray)
+    fod_dtl_rr   = copy.deepcopy(diearray)
 
     # Reroll ones + drop low
     thd_rro_dl    = copy.deepcopy(diearray)
 
-    # Drop low, add d3 (SS + Audacity)
+    # Drop low, add d3 (SS + Daring)
     thd_dl_d3     = copy.deepcopy(diearray)
 
     # Magic throws
@@ -174,14 +192,9 @@ def createTables(sides):
                 thd_drophigh[result_dh][1] += prob3
                 thd_drophigh[result_dh][2] += 1
                 
-                # Add result to magic die throw with two dice
-                if ((die1 == 6) and (die2 == 6)):
-                    twd_opchance[result3][1] += prob3
-                    twd_opchance[result3][2] += 1
-                    twd_opchance[4][4]       += prob3
-                else:
-                    twd_opchance[result2][1] += prob3
-                    twd_opchance[result2][2] += 1
+                # Add result to magic die throw with three dice
+                if ((die1 == die2 ) and (die2 == die3)):
+                    thd_opchance[4][4]       += prob3
                 
                 # Fourth die
                 for die4 in range(1,sides+1):
@@ -190,21 +203,14 @@ def createTables(sides):
                     fourdice[result4][1] += prob4
                     fourdice[result4][2] += 1
 
-                    # Add result to Drop low, add d3 (SS + Audacity)
+                    # Add result to Drop low, add d3 (SS + Daring)
                     if die4 in range (1,4):
                         thd_dl_d3[result_dl + die4][1] += prob3*(1/3)
                         thd_dl_d3[result_dl + die4][2] += 1
 
-                    # Add result to magic die throw with three dice
-                    if (   (die1 == 6) and (die2 == 6)
-                        or (die1 == 6) and (die3 == 6)
-                        or (die2 == 6) and (die3 == 6)):
-                        thd_opchance[result4][1] += prob4
-                        thd_opchance[result4][2] += 1
-                        thd_opchance[4][4]       += prob4
-                    else:
-                        thd_opchance[result3][1] += prob4
-                        thd_opchance[result3][2] += 1
+                    # Add percentage to op-chance if we have three of a kind
+                    if (find_triples([die1, die2, die3, die4])):
+                        fod_opchance[4][4]       += prob4
             
                     # Adding probs for 2D6 with reroll one
                     if ((die1 == 1) and (die2 == 1)):
@@ -232,22 +238,24 @@ def createTables(sides):
                     fod_droplow[result_dl4][1] += prob4
                     fod_droplow[result_dl4][2] += 1
 
+                    # Add result to drop two low (SS + Daring 2.0)
+                    diearray = [die1, die2, die3, die4]
+                    diearray.remove(min(diearray))
+                    diearray.remove(min(diearray))
+                    result_d2l4 = sum(diearray)
+                    fod_droptwolow[result_d2l4][1] += prob4
+                    fod_droptwolow[result_d2l4][2] += 1
+
                     # Fifth die
                     for die5 in range(1,sides+1):
                         result5 = result4 + die5
                         prob5   = prob4   * prob
                         fivedice[result5][1] += prob5
                         fivedice[result5][2] += 1
-    
-                        # Add result to magic die throw with four dice
-                        # If the sum of the two largest equals 12, we have OP
-                        if (sum(heapq.nlargest(2,[die1,die2,die3,die4])) == 12):
-                            fod_opchance[result5][1] += prob5
-                            fod_opchance[result5][2] += 1
-                            fod_opchance[4][4]       += prob5
-                        else:
-                            fod_opchance[result4][1] += prob5
-                            fod_opchance[result4][2] += 1
+                        
+                    # Add percentage to op-chance if we have three of a kind
+                        if (find_triples([die1, die2, die3, die4, die5])):
+                            fid_opchance[4][4]       += prob5   
     
                         # Sixth die
                         for die6 in range(1,sides+1):
@@ -255,16 +263,6 @@ def createTables(sides):
                             prob6   = prob5   * prob
                             sixdice[result6][1] += prob6
                             sixdice[result6][2] += 1
-    
-                            # Add result to magic die throw with five dice
-                            # If the sum of the two largest equals 12, we have OP
-                            if (sum(heapq.nlargest(2,[die1,die2,die3,die4,die5])) == 12):
-                                fid_opchance[result6][1] += prob6
-                                fid_opchance[result6][2] += 1
-                                fid_opchance[4][4]       += prob6
-                            else:
-                                fid_opchance[result5][1] += prob6
-                                fid_opchance[result5][2] += 1
     
                             # Adding probs for 2D6 with reroll one
                             if ((die1 == 1) and (die2 == 1) and (die3 == 1)):
@@ -297,6 +295,40 @@ def createTables(sides):
                             result_dl_rr = max(result_dl1, result_dl2)
                             thd_dl_rr[result_dl_rr][1] += prob6
                             thd_dl_rr[result_dl_rr][2] += 1
+
+                            # Seventh die
+                            for die7 in range(1,sides+1):
+                                result7 = result6 + die7
+                                prob7   = prob6   * prob
+
+                                # Does not need this
+                                # sevendice[result7][1] += prob7
+                                # sevendice[result7][2] += 1
+
+                                # Sixth die
+                                for die8 in range(1,sides+1):
+                                    result8 = result7 + die8
+                                    prob8   = prob7   * prob
+
+                                    # Does not need this
+                                    # eightdice[result8][1] += prob7
+                                    # eightdice[result8][2] += 1
+                                    
+                                    # Add result to drop two low (SS + Daring 2.0 + reroll)
+                                    diearray = [die1, die2, die3, die4]
+                                    diearray.remove(min(diearray))
+                                    diearray.remove(min(diearray))
+                                    result_d2l4 = sum(diearray)
+
+                                    diearray2 = [die5, die6, die7, die8]
+                                    diearray2.remove(min(diearray2))
+                                    diearray2.remove(min(diearray2))
+                                    result_d2l42 = sum(diearray2)
+
+                                    result_d2l4 = max(result_d2l4, result_d2l42)
+
+                                    fod_dtl_rr[result_d2l4][1] += prob8
+                                    fod_dtl_rr[result_d2l4][2] += 1
     
     # Summing up probs
     sum_prob(onedie)
@@ -305,13 +337,17 @@ def createTables(sides):
     sum_prob(fourdice)
     sum_prob(fivedice)
     sum_prob(sixdice)
+    sum_prob(sevendice)
+    sum_prob(eightdice)
     # Drop high/low
     sum_prob(thd_droplow)
     sum_prob(thd_drophigh)
     sum_prob(fod_droplow)
+    sum_prob(fod_droptwolow)
     # Reroll all
     sum_prob(twd_rr)
     sum_prob(thd_dl_rr)
+    sum_prob(fod_dtl_rr)
     # Reroll ones
     sum_prob(od_rerollone)
     sum_prob(twd_rerollone)
@@ -353,13 +389,19 @@ def printTables(verbose):
 
         print("\n4D6 drop low:")
         print_prob(fod_droplow)
-        
+
+        print("\n4D6 drop two low:")
+        print_prob(fod_droptwolow)
+
         print("\n2D6, reroll, take highest:")
         print_prob(twd_rr)
     
         print("\n3D6 drop low, reroll, take highest:")
         print_prob(thd_dl_rr)
-    
+
+        print("\n4D6 drop two low, reroll, take highest:")
+        print_prob(fod_dtl_rr)
+        
         print("\n1D6 reroll ones:")
         print_prob(od_rerollone)
     
@@ -375,17 +417,17 @@ def printTables(verbose):
         print("\n3D6, drop lowest, add d3")
         print_prob(thd_dl_d3)
     
-        print("\n2D6 with OP-chance:")
-        print_prob(twd_opchance)
-    
-        print("\n3D6 with OP-chance:")
-        print_prob(thd_opchance)
-    
-        print("\n4D6 with OP-chance:")
-        print_prob(fod_opchance)
-    
-        print("\n5D6 with OP-chance:")
-        print_prob(fid_opchance)
+#        print("\n2D6 with OP-chance:")
+#        print_prob(twd_opchance)
+#    
+#        print("\n3D6 with OP-chance:")
+#        print_prob(thd_opchance)
+#    
+#        print("\n4D6 with OP-chance:")
+#        print_prob(fod_opchance)
+#    
+#        print("\n5D6 with OP-chance:")
+#        print_prob(fid_opchance)
     
     print("\nLeaderhip\t2\t3\t4\t5\t6\t7\t8\t9\t10")
     print("Normal\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%" %
@@ -439,51 +481,61 @@ def printTables(verbose):
            100*(1-thd_dl_rr[2][3]), 100*(1-thd_dl_rr[3][3]), 100*(1-thd_dl_rr[4][3]), 100*(1-thd_dl_rr[5][3]),  100*(1-thd_dl_rr[6][3]),
            100*(1-thd_dl_rr[7][3]), 100*(1-thd_dl_rr[8][3]), 100*(1-thd_dl_rr[9][3]), 100*(1-thd_dl_rr[10][3]), 100*(1-thd_dl_rr[11][3]),
            thd_dl_rr[0][4]))
-    print("SS+Audacity\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f" %
+#    print("SS+Daring1.3\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f" %
+#          (100,
+#           100*(1-thd_dl_d3[2][3]), 100*(1-thd_dl_d3[3][3]), 100*(1-thd_dl_d3[4][3]), 100*(1-thd_dl_d3[5][3]),  100*(1-thd_dl_d3[6][3]),
+#           100*(1-thd_dl_d3[7][3]), 100*(1-thd_dl_d3[8][3]), 100*(1-thd_dl_d3[9][3]), 100*(1-thd_dl_d3[10][3]), 100*(1-thd_dl_d3[11][3]),
+#           thd_dl_d3[0][4]))
+    print("SS+Daring\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f" %
           (100,
-           100*(1-thd_dl_d3[2][3]), 100*(1-thd_dl_d3[3][3]), 100*(1-thd_dl_d3[4][3]), 100*(1-thd_dl_d3[5][3]),  100*(1-thd_dl_d3[6][3]),
-           100*(1-thd_dl_d3[7][3]), 100*(1-thd_dl_d3[8][3]), 100*(1-thd_dl_d3[9][3]), 100*(1-thd_dl_d3[10][3]), 100*(1-thd_dl_d3[11][3]),
-           thd_dl_d3[0][4]))
-    print("SS+ToT\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f" %
+           100*(1-fod_droptwolow[2][3]), 100*(1-fod_droptwolow[3][3]), 100*(1-fod_droptwolow[4][3]), 100*(1-fod_droptwolow[5][3]),  100*(1-fod_droptwolow[6][3]),
+           100*(1-fod_droptwolow[7][3]), 100*(1-fod_droptwolow[8][3]), 100*(1-fod_droptwolow[9][3]), 100*(1-fod_droptwolow[10][3]), 100*(1-fod_droptwolow[11][3]),
+           fod_droptwolow[0][4]))
+    print("SS+RR+Daring\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f" % 
           (100,
-           100*(1-fod_droplow[2][3]), 100*(1-fod_droplow[3][3]), 100*(1-fod_droplow[4][3]), 100*(1-fod_droplow[5][3]),  100*(1-fod_droplow[6][3]), 
-           100*(1-fod_droplow[7][3]), 100*(1-fod_droplow[8][3]), 100*(1-fod_droplow[9][3]), 100*(1-fod_droplow[10][3]), 100*(1-fod_droplow[11][3]),
-           fod_droplow[0][4]))
+           100*(1-fod_dtl_rr[2][3]), 100*(1-fod_dtl_rr[3][3]), 100*(1-fod_dtl_rr[4][3]), 100*(1-fod_dtl_rr[5][3]),  100*(1-fod_dtl_rr[6][3]),
+           100*(1-fod_dtl_rr[7][3]), 100*(1-fod_dtl_rr[8][3]), 100*(1-fod_dtl_rr[9][3]), 100*(1-fod_dtl_rr[10][3]), 100*(1-fod_dtl_rr[11][3]),
+           fod_dtl_rr[0][4]))
+#    print("SS+ToT\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f" %
+#          (100,
+#           100*(1-fod_droplow[2][3]), 100*(1-fod_droplow[3][3]), 100*(1-fod_droplow[4][3]), 100*(1-fod_droplow[5][3]),  100*(1-fod_droplow[6][3]), 
+#           100*(1-fod_droplow[7][3]), 100*(1-fod_droplow[8][3]), 100*(1-fod_droplow[9][3]), 100*(1-fod_droplow[10][3]), 100*(1-fod_droplow[11][3]),
+#           fod_droplow[0][4]))
     #print("SS+BotS+RR\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f" %
     #      (100,
     #       100*(1-thd_rro_dl[2][3]**2), 100*(1-thd_rro_dl[3][3]**2), 100*(1-thd_rro_dl[4][3]**2), 100*(1-thd_rro_dl[5][3]**2),  100*(1-thd_rro_dl[6][3]**2),
     #       100*(1-thd_rro_dl[7][3]**2), 100*(1-thd_rro_dl[8][3]**2), 100*(1-thd_rro_dl[9][3]**2), 100*(1-thd_rro_dl[10][3]**2), 100*(1-thd_rro_dl[11][3]**2),
     #       thd_rro_dl[0][4]))
     
-    print("\nExtra die available:")
-    print("Cast/Dispel\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\t14\t15\t16\t17\t18\t19\t\tAVG\tOP")
-    print("1D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f\t%.1f%%" % 
-          (0, 100*(1-onedie[2][3]), 100*(1-onedie[3][3]), 100*(1-onedie[4][3]), 100*(1-onedie[5][3]), 100*(1-onedie[6][3]), 
-           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-           onedie[0][4], 0))
-    print("2D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f\t%.1f%%" % 
-          (100*(1-twd_opchance[1][3]),   100*(1-twd_opchance[2][3]),  100*(1-twd_opchance[3][3]),  100*(1-twd_opchance[4][3]),  100*(1-twd_opchance[5][3]),  100*(1-twd_opchance[6][3] ), 
-           100*(1-twd_opchance[7][3]),   100*(1-twd_opchance[8][3]),  100*(1-twd_opchance[9][3]),  100*(1-twd_opchance[10][3]), 100*(1-twd_opchance[11][3]), 100*(1-twd_opchance[12][3]), 
-           100*(1-twd_opchance[13][3]),  100*(1-twd_opchance[14][3]), 100*(1-twd_opchance[15][3]), 100*(1-twd_opchance[16][3]), 100*(1-twd_opchance[17][3]), 100*(1-twd_opchance[18][3]), 
-           twd_opchance[0][4], 100*twd_opchance[4][4]))
-    print("3D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f\t%.1f%%" % 
-          (100*(1-thd_opchance[1][3]),   100*(1-thd_opchance[2][3]),  100*(1-thd_opchance[3][3]),  100*(1-thd_opchance[4][3]),  100*(1-thd_opchance[5][3]),  100*(1-thd_opchance[6][3] ), 
-           100*(1-thd_opchance[7][3]),   100*(1-thd_opchance[8][3]),  100*(1-thd_opchance[9][3]),  100*(1-thd_opchance[10][3]), 100*(1-thd_opchance[11][3]), 100*(1-thd_opchance[12][3]), 
-           100*(1-thd_opchance[13][3]),  100*(1-thd_opchance[14][3]), 100*(1-thd_opchance[15][3]), 100*(1-thd_opchance[16][3]), 100*(1-thd_opchance[17][3]), 100*(1-thd_opchance[18][3]), 
-           thd_opchance[0][4], 100*thd_opchance[4][4]))
-    print("4D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f\t%.1f%%" % 
-          (100*(1-fod_opchance[1][3]),   100*(1-fod_opchance[2][3]),  100*(1-fod_opchance[3][3]),  100*(1-fod_opchance[4][3]),  100*(1-fod_opchance[5][3]),  100*(1-fod_opchance[6][3] ), 
-           100*(1-fod_opchance[7][3]),   100*(1-fod_opchance[8][3]),  100*(1-fod_opchance[9][3]),  100*(1-fod_opchance[10][3]), 100*(1-fod_opchance[11][3]), 100*(1-fod_opchance[12][3]), 
-           100*(1-fod_opchance[13][3]),  100*(1-fod_opchance[14][3]), 100*(1-fod_opchance[15][3]), 100*(1-fod_opchance[16][3]), 100*(1-fod_opchance[17][3]), 100*(1-fod_opchance[18][3]), 
-           fod_opchance[0][4], 100*fod_opchance[4][4]))
-    print("5D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f\t%.1f%%" % 
-          (100*(1-fid_opchance[1][3]),   100*(1-fid_opchance[2][3]),  100*(1-fid_opchance[3][3]),  100*(1-fid_opchance[4][3]),  100*(1-fid_opchance[5][3]),  100*(1-fid_opchance[6][3] ),
-           100*(1-fid_opchance[7][3]),   100*(1-fid_opchance[8][3]),  100*(1-fid_opchance[9][3]),  100*(1-fid_opchance[10][3]), 100*(1-fid_opchance[11][3]), 100*(1-fid_opchance[12][3]), 
-           100*(1-fid_opchance[13][3]),  100*(1-fid_opchance[14][3]), 100*(1-fid_opchance[15][3]), 100*(1-fid_opchance[16][3]), 100*(1-fid_opchance[17][3]), 100*(1-fid_opchance[18][3]), 
-           fid_opchance[0][4], 100*fid_opchance[4][4]))
+#    print("\nExtra die available:")
+#    print("Cast/Dispel\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\t14\t15\t16\t17\t18\t19\t\tAVG\tOP")
+#    print("1D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f\t%.1f%%" % 
+#          (0, 100*(1-onedie[2][3]), 100*(1-onedie[3][3]), 100*(1-onedie[4][3]), 100*(1-onedie[5][3]), 100*(1-onedie[6][3]), 
+#           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+#           onedie[0][4], 0))
+#    print("2D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f\t%.1f%%" % 
+#          (100*(1-twd_opchance[1][3]),   100*(1-twd_opchance[2][3]),  100*(1-twd_opchance[3][3]),  100*(1-twd_opchance[4][3]),  100*(1-twd_opchance[5][3]),  100*(1-twd_opchance[6][3] ), 
+#           100*(1-twd_opchance[7][3]),   100*(1-twd_opchance[8][3]),  100*(1-twd_opchance[9][3]),  100*(1-twd_opchance[10][3]), 100*(1-twd_opchance[11][3]), 100*(1-twd_opchance[12][3]), 
+#           100*(1-twd_opchance[13][3]),  100*(1-twd_opchance[14][3]), 100*(1-twd_opchance[15][3]), 100*(1-twd_opchance[16][3]), 100*(1-twd_opchance[17][3]), 100*(1-twd_opchance[18][3]), 
+#           twd_opchance[0][4], 100*twd_opchance[4][4]))
+#    print("3D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f\t%.1f%%" % 
+#          (100*(1-thd_opchance[1][3]),   100*(1-thd_opchance[2][3]),  100*(1-thd_opchance[3][3]),  100*(1-thd_opchance[4][3]),  100*(1-thd_opchance[5][3]),  100*(1-thd_opchance[6][3] ), 
+#           100*(1-thd_opchance[7][3]),   100*(1-thd_opchance[8][3]),  100*(1-thd_opchance[9][3]),  100*(1-thd_opchance[10][3]), 100*(1-thd_opchance[11][3]), 100*(1-thd_opchance[12][3]), 
+#           100*(1-thd_opchance[13][3]),  100*(1-thd_opchance[14][3]), 100*(1-thd_opchance[15][3]), 100*(1-thd_opchance[16][3]), 100*(1-thd_opchance[17][3]), 100*(1-thd_opchance[18][3]), 
+#           thd_opchance[0][4], 100*thd_opchance[4][4]))
+#    print("4D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f\t%.1f%%" % 
+#          (100*(1-fod_opchance[1][3]),   100*(1-fod_opchance[2][3]),  100*(1-fod_opchance[3][3]),  100*(1-fod_opchance[4][3]),  100*(1-fod_opchance[5][3]),  100*(1-fod_opchance[6][3] ), 
+#           100*(1-fod_opchance[7][3]),   100*(1-fod_opchance[8][3]),  100*(1-fod_opchance[9][3]),  100*(1-fod_opchance[10][3]), 100*(1-fod_opchance[11][3]), 100*(1-fod_opchance[12][3]), 
+#           100*(1-fod_opchance[13][3]),  100*(1-fod_opchance[14][3]), 100*(1-fod_opchance[15][3]), 100*(1-fod_opchance[16][3]), 100*(1-fod_opchance[17][3]), 100*(1-fod_opchance[18][3]), 
+#           fod_opchance[0][4], 100*fod_opchance[4][4]))
+#    print("5D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f\t%.1f%%" % 
+#          (100*(1-fid_opchance[1][3]),   100*(1-fid_opchance[2][3]),  100*(1-fid_opchance[3][3]),  100*(1-fid_opchance[4][3]),  100*(1-fid_opchance[5][3]),  100*(1-fid_opchance[6][3] ),
+#           100*(1-fid_opchance[7][3]),   100*(1-fid_opchance[8][3]),  100*(1-fid_opchance[9][3]),  100*(1-fid_opchance[10][3]), 100*(1-fid_opchance[11][3]), 100*(1-fid_opchance[12][3]), 
+#           100*(1-fid_opchance[13][3]),  100*(1-fid_opchance[14][3]), 100*(1-fid_opchance[15][3]), 100*(1-fid_opchance[16][3]), 100*(1-fid_opchance[17][3]), 100*(1-fid_opchance[18][3]), 
+#           fid_opchance[0][4], 100*fid_opchance[4][4]))
     
-    print("\nNo extra die available:")
-    print("Cast/Dispel\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\t14\t15\t16\t17\t18\t19\t\tAVG\tOP")
+#    print("\nNo extra die available:")
+    print("\nCast/Dispel\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\t14\t15\t16\t17\t18\t19\t\tAVG\tOP")
     print("1D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t\t%.1f\t%.1f%%" % 
           (0, 100*(1-onedie[2][3]), 100*(1-onedie[3][3]), 100*(1-onedie[4][3]), 100*(1-onedie[5][3]), 100*(1-onedie[6][3]), 
            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
@@ -509,21 +561,27 @@ def printTables(verbose):
            100*(1-fivedice[13][3]),  100*(1-fivedice[14][3]), 100*(1-fivedice[15][3]), 100*(1-fivedice[16][3]), 100*(1-fivedice[17][3]), 100*(1-fivedice[18][3]), 
            fivedice[0][4], 100*fid_opchance[4][4]))
     
-    print("\nMiscast/OP\tAmnesia\tCD\tBitV")
-    print("1D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (0, 0, 0))
-    print("2D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (0,       0,       0))
-    print("3D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (thd_opchance[4][4]*100*1/3*0.5, 0,       0))
-    print("4D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fod_opchance[4][4]*100*2/3*0.5, fod_opchance[4][4]*100*1/3*0.5, 0))
-    print("5D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fid_opchance[4][4]*100*3/3*0.5, fid_opchance[4][4]*100*2/3*0.5, fid_opchance[4][4]*100*1/3*0.5))
+    print("\nMiscast/OP\tBroCon\tWiFi\tMagInf\tAmn\tBackl\tImplo\tBitV")
+    print("1D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%" % (0, 0, 0, 0, 0, 0, 0))
+    print("2D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%" % (0, 0, 0, 0, 0, 0, 0))
+    print("3D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%" %
+          (thd_opchance[4][4]*100*1/6, thd_opchance[4][4]*100*1/6, thd_opchance[4][4]*100*1/6,
+           thd_opchance[4][4]*100*1/6, thd_opchance[4][4]*100*1/6, 0, 0))
+    print("4D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%" %
+          (fod_opchance[4][4]*100*1/6, fod_opchance[4][4]*100*1/6, fod_opchance[4][4]*100*1/6,
+           fod_opchance[4][4]*100*1/6, fod_opchance[4][4]*100*1/6, fod_opchance[4][4]*100*1/6, 0))
+    print("5D6\t\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%\t%.1f%%" %
+          (0, fid_opchance[4][4]*100*1/6, fid_opchance[4][4]*100*1/6,
+           fid_opchance[4][4]*100*1/6, fid_opchance[4][4]*100*1/6, fid_opchance[4][4]*100*1/6, fid_opchance[4][4]*100*1/6))
 
 
-    print("\nThaumaturgy")
-    print("Miscast/OP\tAmnesia\tCD\tBitV")
-    print("1D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (0, 0, 0))
-    print("2D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (twd_opchance[4][4]*100*1/3*0.5, 0,       0))
-    print("3D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (thd_opchance[4][4]*100*2/3*0.5, thd_opchance[4][4]*100*1/3*0.5, 0))
-    print("4D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fod_opchance[4][4]*100*3/3*0.5, fod_opchance[4][4]*100*2/3*0.5, fod_opchance[4][4]*100*1/3*0.5))
-    print("5D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fid_opchance[4][4]*100*3/3*0.5, fid_opchance[4][4]*100*2/3*0.5, fid_opchance[4][4]*100*1/3*0.5))
+#    print("\nThaumaturgy")
+#    print("Miscast/OP\tAmnesia\tCD\tBitV")
+#    print("1D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (0, 0, 0))
+#    print("2D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (twd_opchance[4][4]*100*1/3*0.5, 0,       0))
+#    print("3D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (thd_opchance[4][4]*100*2/3*0.5, thd_opchance[4][4]*100*1/3*0.5, 0))
+#    print("4D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fod_opchance[4][4]*100*3/3*0.5, fod_opchance[4][4]*100*2/3*0.5, fod_opchance[4][4]*100*1/3*0.5))
+#    print("5D6\t\t%.1f%%\t%.1f%%\t%.1f%%" % (fid_opchance[4][4]*100*3/3*0.5, fid_opchance[4][4]*100*2/3*0.5, fid_opchance[4][4]*100*1/3*0.5))
 
 if __name__ == "__main__":
    main()
